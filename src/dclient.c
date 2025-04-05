@@ -24,7 +24,7 @@ void sendMessage (Message *message){
     }
 
     //TODO: confirmar se pode ser 512;
-    if (bufferedWrite(fd_server, metaInfo, sizeof(MetaInformation)) == -1) {
+    if (bufferedWrite(fd_server, metaInfo, metaInformation_size()) == -1) {
         perror("Erro ao escrever no FIFO do servidor");
         close(fd_server);
         exit(1);
