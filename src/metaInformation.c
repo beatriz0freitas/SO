@@ -8,7 +8,7 @@ struct MetaInformation{
     char author[200];         //separados por ;
     int year;
     char path[64];
-    char keywords[64];
+    char keywords[64];      //ainda nao sei se vale a pena guardar
 };
 
 //caso altermos para char* na struct temos de fazer strdup()
@@ -30,7 +30,8 @@ char *metaInformation_get_DocumentTitle(MetaInformation *info) {
 }
 
 void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title) {
-    strncpy(info->documentTitle, title, sizeof(info->documentTitle));
+    memset(info->documentTitle, 0, sizeof(info->documentTitle));
+    strncpy(info->documentTitle, title, sizeof(info->documentTitle)-1);
     info->documentTitle[sizeof(info->documentTitle) - 1] = '\0'; // Ensure null termination
 }
 
@@ -39,7 +40,8 @@ char *metaInformation_get_Author(MetaInformation *info) {
 }
 
 void metaInformation_set_Author(MetaInformation *info, const char *author) {
-    strncpy(info->author, author, sizeof(info->author));
+    memset(info->author, 0, sizeof(info->suthor));
+    strncpy(info->author, author, sizeof(info->author)-1);
     info->author[sizeof(info->author) - 1] = '\0'; 
 }
 
@@ -56,7 +58,8 @@ char *metaInformation_get_Path(MetaInformation *info) {
 }
 
 void metaInformation_set_Path(MetaInformation *info, const char *path) {
-    strncpy(info->path, path, sizeof(info->path));
+    memset(info->path, 0, sizeof(info->path));
+    strncpy(info->path, path, sizeof(info->path)-1);
     info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
@@ -65,7 +68,8 @@ char *metaInformation_get_Keywords(MetaInformation *info) {
 }
 
 void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
-    strncpy(info->keywords, keywords, sizeof(info->keywords));
+    memset(info->keywords, 0, sizeof(info->keywords));
+    strncpy(info->keywords, keywords, sizeof(info->keywords)-1);
     info->keywords[sizeof(info->keywords) - 1] = '\0';
 }
 

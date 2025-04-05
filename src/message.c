@@ -6,6 +6,11 @@ struct Message{
 };
 
 Message *message_new(Command *cmd, MetaInformation *info) {
+    if (!cmd || !info) {
+        fprintf(stderr, "Command ou MetaInformation inválido.\n");
+        return NULL;
+    }
+    
     Message *msg = (Message *)malloc(sizeof(Message));
     if (!msg) {
         perror("Erro ao alocar memória para a mensagem");

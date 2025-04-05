@@ -1,7 +1,7 @@
 #include "command.h"
 
 struct Command {
-    char fifo_client ;   // nome do FIFO de resposa do cliente
+    char *fifo_client ;   // nome do FIFO de resposa do cliente
     char *flag;
     char **args;
     int num_args;
@@ -10,8 +10,14 @@ struct Command {
 Command *command_constroi_de_linha(int numArgs, char *linha[]) {
 
     Command *cmd = (Command *)malloc(sizeof(Command));
+    if (!cmd) {
+        perror("Erro ao alocar memória para Command");
+        exit(1);
+    }   
+    cmd->fifo_client = NULL;
+    cmd->flag = NULL;
+    cmd->args = NULL;
     cmd->num_args = 0;
-
 
     if (numArgs > 2){
         cmd->args = (char **)malloc((numArgs - 2) * sizeof(char *));
@@ -59,16 +65,24 @@ char *command_get_arg_por_indice(Command *cmd, int indice)
 }
 
 
-char *command_get_fifo_client(Command *cmd)
-{
+char *command_get_fifo_client(Command *cmd) {
     return cmd->fifo_client;
 }
 
 void command_set_fifo_client(Command *cmd, char *fifo_client) {
-    if (cmd->fifo_client != NULL) {
+    if (cmd->fifo_client) {
         free(cmd->fifo_client);
     }
+    if (!fifo_client) {
+        fprintf(stderr, "FIFO do cliente inválido.\n");
+        return;
+    }
+
     cmd->fifo_client = strdup(fifo_client);
+    if (!cmd->fifo_client) {
+        perror("Erro ao duplicar string FIFO");
+        exit(1);
+    }   
 }
 
 void command_free(Command *cmd) {
