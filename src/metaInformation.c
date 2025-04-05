@@ -10,6 +10,11 @@ typedef struct Information{
     char keywords[64];
 } Information;
 
+Information *information_new(){
+    Information *information = g_new0(Information, 1);
+    return information;
+}
+
 int getIdDocument(Information *info) {
     return info->idDocument;
 }
