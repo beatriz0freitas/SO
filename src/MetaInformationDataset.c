@@ -1,5 +1,6 @@
-#include "MetaInformationDataset.h"
-#include "MetaInformation.h"
+#include "metaInformationDataset.h"
+#include "metaInformation.h"
+#include <glib.h>
 
 struct MetaInformationDataset{
 
