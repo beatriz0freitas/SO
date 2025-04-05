@@ -1,9 +1,10 @@
-#include "MetaInformationDataset.h"
+#include "metaInformationDataset.h"
+#include "metaInformation.h"
 #include <glib.h>
 
 struct MetaInformationDataset{
 
- GHashTable * MetaInformation;
+ GHashTable *MetaInformation;
  int nextindex;
   
 };
@@ -18,7 +19,7 @@ MetaInformationDataset *MetaInformationDataset_new()
   return dataset;
 }
 
-int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo)
+int metaInformationDataset_add(MetaInformationDataset *dataset, Information *metaInfo)
 {
   int key = dataset->nextindex;
   dataset->nextindex++;
@@ -30,16 +31,16 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 }
 
 void metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
-    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+    Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         g_hash_table_remove(dataset->MetaInformation, (gpointer)key);
         metaInformation_free(metaInfo);
     }
 }
 
-MetaInformation *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key)
+Information *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key)
 {
-    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+    Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         return metaInfo;
     } 
