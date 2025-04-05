@@ -2,17 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Comando {
-    char* fifo_client ;   // nome do FIFO de resposa do cliente
+struct Command {
+    char fifo_client ;   // nome do FIFO de resposa do cliente
     char *flag;
     char **args;
     int num_args;
 };
 
-Comando *comando_constroi_de_linha(int numArgs, char *linha[])
+Command *comando_constroi_de_linha(int numArgs, char *linha[])
 {
 
-    Comando *cmd = (Comando *)malloc(sizeof(Comando));
+    Command *cmd = (Command *)malloc(sizeof(Command));
     cmd->num_args = 0;
 
     cmd->flag = strdup(linha[1]);
@@ -38,17 +38,17 @@ Comando *comando_constroi_de_linha(int numArgs, char *linha[])
 }
 
 
-int comando_get_num_args(Comando *cmd)
+int comando_get_num_args(Command *cmd)
 {
     return cmd->num_args;
 }
 
-char *comando_get_flag(Comando *cmd)
+char *comando_get_flag(Command *cmd)
 {
     return cmd->flag;
 }
 
-char *comando_get_arg_por_indice(Comando *cmd, int indice)
+char *comando_get_arg_por_indice(Command *cmd, int indice)
 {
     if (indice < 0 || indice >= cmd->num_args){
         return NULL;
@@ -56,7 +56,9 @@ char *comando_get_arg_por_indice(Comando *cmd, int indice)
     return cmd->args[indice];
 }
 
-char *comando_get_fifo_client(Comando *cmd)
+
+
+char *comando_get_fifo_client(Command *cmd)
 {
     return cmd->fifo_client;
 }

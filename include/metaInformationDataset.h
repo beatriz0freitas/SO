@@ -8,7 +8,7 @@ MetaInformationDataset *MetaInformationDataset_new();
 
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, Information *metaInfo);
-void metaInformationDataset_remove(MetaInformationDataset *dataset, int key);
+gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key);
 Information *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key);
 
 #endif
