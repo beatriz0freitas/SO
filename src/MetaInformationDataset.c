@@ -23,19 +23,21 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, Information *met
 {
   int key = dataset->nextindex;
   dataset->nextindex++;
-  
 
   g_hash_table_insert(dataset->MetaInformation, (gpointer)key, (gpointer)metaInfo);
 
     return key;
 }
 
-void metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
+gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
     Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         g_hash_table_remove(dataset->MetaInformation, (gpointer)key);
         metaInformation_free(metaInfo);
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 Information *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key)
