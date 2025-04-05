@@ -1,5 +1,6 @@
 #include "comando.h"
 #include <stdlib.h>
+#include <string.h>
 
 struct Comando {
     char fifo_client ;   // nome do FIFO de resposa do cliente
@@ -55,3 +56,7 @@ char *comando_get_arg_por_indice(Comando *cmd, int indice)
     return cmd->args[indice];
 }
 
+char *comando_get_fifo_client(Comando *cmd)
+{
+    return cmd->fifo_client;
+}

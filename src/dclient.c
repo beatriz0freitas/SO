@@ -19,8 +19,7 @@ void sendMessage (Information *message, Comando *comando){
     write(fd_server, message, sizeof(Information));
     close(fd_server);
 
-    //TODO: adicionar fifo_client ao comando
-	int fd_client = open(getFIFO(comando->fifo_client), O_RDONLY);
+	int fd_client = open(comando_get_fifo_client(comando), O_RDONLY);
     if (fd_client == -1) {
         perror("Erro ao abrir FIFO do cliente");
         exit(1);
@@ -33,6 +32,6 @@ void sendMessage (Information *message, Comando *comando){
     printf("Resposta do servidor: %s\n", buffer);
 
     close(fd_client);
-    unlink(getFIFIO(comando->fifo_client));
+    unlink(comando_get_fifo_client(comando));
 }
 

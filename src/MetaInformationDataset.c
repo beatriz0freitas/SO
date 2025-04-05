@@ -1,5 +1,3 @@
-
-
 #include "MetaInformationDataset.h"
 #include <glib.h>
 
