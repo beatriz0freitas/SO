@@ -3,7 +3,7 @@
 #include <string.h>
 
 struct Comando {
-    char fifo_client ;   // nome do FIFO de resposa do cliente
+    char* fifo_client ;   // nome do FIFO de resposa do cliente
     char *flag;
     char **args;
     int num_args;
