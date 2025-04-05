@@ -35,3 +35,23 @@ Comando *comando_constroi_de_linha(int numArgs, char *linha[])
 
     return cmd;
 }
+
+
+int comando_get_num_args(Comando *cmd)
+{
+    return cmd->num_args;
+}
+
+char *comando_get_flag(Comando *cmd)
+{
+    return cmd->flag;
+}
+
+char *comando_get_arg_por_indice(Comando *cmd, int indice)
+{
+    if (indice < 0 || indice >= cmd->num_args){
+        return NULL;
+    }
+    return cmd->args[indice];
+}
+
