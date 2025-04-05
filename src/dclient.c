@@ -16,7 +16,8 @@ void sendMessage (Information *message, Comando *comando){
         exit(1);
     }
 
-    write(fd_server, message, sizeof(Information));
+    //TODO: confirmar se pode ser 512;
+    write(fd_server, message, 512);
     close(fd_server);
 
 	int fd_client = open(comando_get_fifo_client(comando), O_RDONLY);
