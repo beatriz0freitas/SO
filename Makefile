@@ -1,6 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -g -Iinclude
+CFLAGS =$(shell pkg-config --cflags glib-2.0) -Wall -g -Iinclude 
 LDFLAGS =
+LIBS = $(shell pkg-config --libs glib-2.0)
 
 all: folders dserver dclient
 
@@ -12,10 +13,10 @@ folders:
 	@mkdir -p src include obj bin tmp
 
 bin/dserver: obj/dserver.o
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS)  $(LIBS) $^ -o $@
 
 bin/dclient: obj/dclient.o
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
 
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
