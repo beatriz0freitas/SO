@@ -15,7 +15,7 @@ MetaInformationDataset *metaInformationDataset_new() {
     return dataset;
 }
 
-int metaInformationDataset_add(MetaInformationDataset *dataset, Information *metaInfo) {
+int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
     int key = dataset->nextindex;
     dataset->nextindex++;
   
@@ -24,7 +24,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, Information *met
 }
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
-    Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         g_hash_table_remove(dataset->MetaInformation, (gpointer)key);
         metaInformation_free(metaInfo);
@@ -34,8 +34,8 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     return FALSE;
 }
 
-Information *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-    Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
+    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         return metaInfo;
     } 

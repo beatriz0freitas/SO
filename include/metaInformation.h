@@ -1,23 +1,25 @@
 #ifndef META_INFORMATION_H
 #define META_INFORMATION_H
 
-typedef struct Information Information;
+typedef struct MetaInformation MetaInformation;
 
-Information *information_new();
 
-int getIdDocument(Information *info);
-void setIdDocument(Information *info, int id);
-char *getDocumentTitle(Information *info);
-void setDocumentTitle(Information *info, const char *title);
-char *getAuthor(Information *info);
-void setAuthor(Information *info, const char *author);
-int getYear(Information *info);
-void setYear(Information *info, int year);
-char *getPath(Information *info);
-void setPath(Information *info, const char *path);
-char *getKeywords(Information *info);
-void setKeywords(Information *info, const char *keywords);
+MetaInformation *metaInformation_new();
 
-void metaInformation_free(Information *info);
+int metaInformation_get_IdDocument(MetaInformation *info);
+void metaInformation_set_IdDocument(MetaInformation *info, int id);
+char *metaInformation_get_DocumentTitle(MetaInformation *info);
+void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title);
+char *metaInformation_get_Author(MetaInformation *info);
+void metaInformation_set_Author(MetaInformation *info, const char *author);
+int metaInformation_get_Year(MetaInformation *info);
+void metaInformation_set_Year(MetaInformation *info, int year);
+char *metaInformation_get_Path(MetaInformation *info);
+void metaInformation_set_Path(MetaInformation *info, const char *path);
+char *metaInformation_get_Keywords(MetaInformation *info);
+void metaInformation_set_Keywords(MetaInformation *info, const char *keywords);
+
+void metaInformation_free(MetaInformation *info);
+
 
 #endif

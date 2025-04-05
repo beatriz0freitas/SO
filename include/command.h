@@ -18,6 +18,7 @@ int command_get_num_args(Command *cmd);
 char *command_get_flag(Command *cmd);
 char *command_get_arg_por_indice(Command *cmd, int indice);
 char *command_get_fifo_client(Command *cmd);
+void command_set_fifo_client(Command *cmd, char *fifo_client);
 
-
+void command_free(Command *cmd);
 #endif
