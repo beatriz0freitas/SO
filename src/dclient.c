@@ -8,7 +8,7 @@
 #include "metaInformation.h"
 #include "utils.h"
 
-void sendMessage (Information *message, Comando *comando){
+void sendMessage (Information *message, Command *comando){
     //TODO: pasta fifos
 	int fd_server = open("fifo/dserver", O_WRONLY);
     if (fd_server == -1) {
