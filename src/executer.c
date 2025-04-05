@@ -25,7 +25,7 @@ char *executer(Executer *executer, Command *command, MetaInformationDataset *dat
         Information *metaInfo = information_new();
         setDocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
         setAuthor(metaInfo, command_get_arg_por_indice(command, 1));
-        setYear(metaInfo, atoi(command_get_arg_por_indice(command, 0)));
+        setYear(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
         setPath(metaInfo, command_get_arg_por_indice(command, 3));
 
         int index = metaInformationDataset_add(dataset, metaInfo);

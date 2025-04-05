@@ -1,7 +1,5 @@
 #include "command.h"
 
-
-
 struct Command {
     char fifo_client ;   // nome do FIFO de resposa do cliente
     char *flag;
