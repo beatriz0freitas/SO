@@ -1,5 +1,4 @@
 #include "metaInformationDataset.h"
-#include "metaInformation.h"
 #include <glib.h>
 
 struct MetaInformationDataset{
@@ -9,7 +8,7 @@ struct MetaInformationDataset{
 
 // NOTA: Falta adicionar a implementação de escrever, apagar e consultar também pra o ficheiro binário em cada uma das funções
 
-MetaInformationDataset *MetaInformationDataset_new() {
+MetaInformationDataset *metaInformationDataset_new() {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformation = g_hash_table_new(g_direct_hash, g_direct_equal);
     dataset->nextindex = 1;
@@ -35,7 +34,7 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     return FALSE;
 }
 
-Information *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
+Information *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
     Information *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
         return metaInfo;

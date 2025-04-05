@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "metainformation.h": "c"
+        "metaInformation.h": "c",
+        "metaInformationDataset.h": "c",
+        "executer.h": "c"
     }
 }

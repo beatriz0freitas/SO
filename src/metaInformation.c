@@ -1,5 +1,6 @@
 #include "metaInformation.h"
 #include <string.h>
+#include <glib.h>
 
 struct Information{
     int idDocument;         //TODO: temos de definir como vamos catalogar
@@ -10,63 +11,64 @@ struct Information{
     char keywords[64];
 };
 
-Information *information_new(){
+Information *metaInformation_new(){
     Information *information = g_new0(Information, 1);
     return information;
 }
 
-int getIdDocument(Information *info) {
+int metaInformation_get_IdDocument(Information *info) {
     return info->idDocument;
 }
 
-void setIdDocument(Information *info, int id) {
+void metaInformation_set_IdDocument(Information *info, int id) {
     info->idDocument = id;
 }
 
-char *getDocumentTitle(Information *info) {
+char *metaInformation_get_DocumentTitle(Information *info) {
     return info->documentTitle;
 }
 
-void setDocumentTitle(Information *info, const char *title) {
+void metaInformation_set_DocumentTitle(Information *info, const char *title) {
     strncpy(info->documentTitle, title, sizeof(info->documentTitle));
     info->documentTitle[sizeof(info->documentTitle) - 1] = '\0'; // Ensure null termination
 }
 
-char *getAuthor(Information *info) {
+char *metaInformation_get_Author(Information *info) {
     return info->author;
 }
 
-void setAuthor(Information *info, const char *author) {
+void metaInformation_set_Author(Information *info, const char *author) {
     strncpy(info->author, author, sizeof(info->author));
     info->author[sizeof(info->author) - 1] = '\0'; 
 }
 
-int getYear(Information *info) {
+int metaInformation_get_Year(Information *info) {
     return info->year;
 }
 
-void setYear(Information *info, int year) {
+void metaInformation_set_Year(Information *info, int year) {
     info->year = year;
 }
 
-char *getPath(Information *info) {
+char *metaInformation_get_Path(Information *info) {
     return info->path;
 }
 
-void setPath(Information *info, const char *path) {
+void metaInformation_set_Path(Information *info, const char *path) {
     strncpy(info->path, path, sizeof(info->path));
     info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
-char *getKeywords(Information *info) {
+char *metaInformation_get_Keywords(Information *info) {
     return info->keywords;
 }
 
-void setKeywords(Information *info, const char *keywords) {
+void metaInformation_set_Keywords(Information *info, const char *keywords) {
     strncpy(info->keywords, keywords, sizeof(info->keywords));
     info->keywords[sizeof(info->keywords) - 1] = '\0';
 }
 
+
 void metaInformation_free(Information *info) {
-    g_free(info); // se tiveres usado g_new ou malloc para o alocar
+    g_free(info);
 }

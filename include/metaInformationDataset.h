@@ -1,6 +1,7 @@
 #ifndef METAINFORMATIONDATASET_C
 #define METAINFORMATIONDATASET_C
 
+#include "metaInformation.h"
 
 typedef struct MetaInformationDataset MetaInformationDataset;
 MetaInformationDataset *MetaInformationDataset_new();
