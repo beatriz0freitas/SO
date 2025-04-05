@@ -3,6 +3,8 @@
 
 typedef struct Information Information;
 
+Information *information_new();
+
 int getIdDocument(Information *info);
 void setIdDocument(Information *info, int id);
 char *getDocumentTitle(Information *info);

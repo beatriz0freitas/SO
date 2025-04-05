@@ -1,6 +1,6 @@
-#include "comando.h"
-#include <stdlib.h>
-#include <string.h>
+#include "command.h"
+
+
 
 struct Command {
     char fifo_client ;   // nome do FIFO de resposa do cliente
@@ -9,7 +9,7 @@ struct Command {
     int num_args;
 };
 
-Command *comando_constroi_de_linha(int numArgs, char *linha[])
+Command *command_constroi_de_linha(int numArgs, char *linha[])
 {
 
     Command *cmd = (Command *)malloc(sizeof(Command));
@@ -19,7 +19,6 @@ Command *comando_constroi_de_linha(int numArgs, char *linha[])
 
     if (numArgs > 2){
         cmd->args = (char **)malloc((numArgs - 2) * sizeof(char *));
-
         if (!cmd->args){
             printf("Erro ao alocar memória\n");
             exit(1);
@@ -29,26 +28,30 @@ Command *comando_constroi_de_linha(int numArgs, char *linha[])
             cmd->args[cmd->num_args] = strdup(linha[i]);
             cmd->num_args++;
         }
-    }
-    else{
+
+    } else{
         cmd->args = NULL;
     }
+
+    char fifo_name[256];
+    snprintf(fifo_name, sizeof(fifo_name), "fifo/client_%d", getpid());
+    cmd->fifo_client = strdup(fifo_name);
 
     return cmd;
 }
 
 
-int comando_get_num_args(Command *cmd)
+int command_get_num_args(Command *cmd)
 {
     return cmd->num_args;
 }
 
-char *comando_get_flag(Command *cmd)
+char *command_get_flag(Command *cmd)
 {
     return cmd->flag;
 }
 
-char *comando_get_arg_por_indice(Command *cmd, int indice)
+char *command_get_arg_por_indice(Command *cmd, int indice)
 {
     if (indice < 0 || indice >= cmd->num_args){
         return NULL;
@@ -58,7 +61,7 @@ char *comando_get_arg_por_indice(Command *cmd, int indice)
 
 
 
-char *comando_get_fifo_client(Command *cmd)
+char *command_get_fifo_client(Command *cmd)
 {
     return cmd->fifo_client;
 }

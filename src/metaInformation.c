@@ -68,6 +68,7 @@ void setKeywords(Information *info, const char *keywords) {
     info->keywords[sizeof(info->keywords) - 1] = '\0';
 }
 
+
 void metaInformation_free(Information *info) {
     g_free(info);
 }

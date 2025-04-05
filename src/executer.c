@@ -1,10 +1,5 @@
-
 #include "executer.h"
-#include "comando.h"
-#include "metaInformationDataset.h"
-#include "metaInformation.h"
 #include <glib.h>
-
 
 struct Executer {
     int num_executions;
@@ -18,8 +13,9 @@ Executer *executer_new() {
 
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
-char *executer(Executer *executer, Command *comando, MetaInformationDataset *dataset) {
-    char *flag = comando_get_flag(comando);
+char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset) {
+    char *flag = command_get_flag(command);
+    char *resposta = NULL;
 
     if (flag == NULL) {
         return NULL;
@@ -27,22 +23,21 @@ char *executer(Executer *executer, Command *comando, MetaInformationDataset *dat
 
     if (flag == "-a"){
         Information *metaInfo = information_new();
-        setDocumentTitle(metaInfo, comando_get_arg_por_indice(comando, 0));
-        setAuthor(metaInfo, comando_get_arg_por_indice(comando, 1));
-        setYear(metaInfo, atoi(comando_get_arg_por_indice(comando, 0)));
-        setPath(metaInfo, comando_get_arg_por_indice(comando, 3));
+        setDocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
+        setAuthor(metaInfo, command_get_arg_por_indice(command, 1));
+        setYear(metaInfo, atoi(command_get_arg_por_indice(command, 0)));
+        setPath(metaInfo, command_get_arg_por_indice(command, 3));
 
-        int index = metaInformationDataset_add(dataset, metaInfo)
+        int index = metaInformationDataset_add(dataset, metaInfo);
 
-        char resposta[100]; // ou maior se precisar
         sprintf(resposta, "ficheiro foi indexado com sucesso no indice %d", index); //DUVIDA NAO SEI SE PODEMOS USAR
     }
     if (flag == "-c"){
-        char *resposta = "ficheiro foi consultado com sucesso";
+        resposta = "ficheiro foi consultado com sucesso";
         //
     }
     if (flag == "-d"){
-        char *resposta = "ficheiro foi apagado com sucesso";
+        resposta = "ficheiro foi apagado com sucesso";
         //
     }
     

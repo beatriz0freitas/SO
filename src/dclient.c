@@ -4,11 +4,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "comando.h"
+#include "command.h"
 #include "metaInformation.h"
 #include "utils.h"
 
-void sendMessage (Information *message, Command *comando){
+void sendMessage (Information *message, Command *command){
     //TODO: pasta fifos
 	int fd_server = open("fifo/dserver", O_WRONLY);
     if (fd_server == -1) {
@@ -55,11 +55,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Uso inválido\n");
         return 1;
     }
-    Comando *comando = comando_constroi_de_linha(argc, argv);
+    command *command = command_constroi_de_linha(argc, argv);
 
     char fifo_client[256];
     snprintf(fifo_client, sizeof(fifo_client), "fifo/client_%d", getpid());
-    comando_set_fifo_client(comando, fifo_client); // definir no comando
+    command_set_fifo_client(command, fifo_client); // definir no command
 
     if (mkfifo(fifo_client, 0666) == -1) {
         perror("Erro ao criar FIFO do cliente");
@@ -68,10 +68,10 @@ int main(int argc, char *argv[]) {
 
     Information *message = metaInformation_new();
 
-    sendMessage(message, comando);
+    sendMessage(message, command);
 
     free(message);
-    free(comando);
+    free(command);
     unlink(fifo_client);
     return 0;
 }
