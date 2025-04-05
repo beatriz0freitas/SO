@@ -2,7 +2,6 @@
 #define META_INFORMATION_H
 
 typedef struct information{
-    //char fifo_client    -  nome do FIFO de resposa do cliente
     int idDocument;         //TODO: temos de definir como vamos catalogar
     char documentTitle[200];
     char author[200];         //separados por ;
