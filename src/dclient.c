@@ -8,7 +8,7 @@
 #include "metaInformation.h"
 #include "utils.h"
 
-void sendMessage (Information *message, Command *command){
+void sendMessage (MetaInformation *message, Command *command){
     //TODO: pasta fifos
 	int fd_server = open("fifo/dserver", O_WRONLY);
     if (fd_server == -1) {
@@ -18,7 +18,7 @@ void sendMessage (Information *message, Command *command){
     }
 
     //TODO: confirmar se pode ser 512;
-    if (write(fd_server, message, sizeof(Information)) == -1) {
+    if (write(fd_server, message, sizeof(MetaInformation)) == -1) {
         perror("Erro ao escrever no FIFO do servidor");
         close(fd_server);
         unlink(fifo_client);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    Information *message = metaInformation_new();
+    MetaInformation *message = metaInformation_new();
 
     sendMessage(message, command);
 

@@ -22,7 +22,7 @@ char *executer(Executer *executer, Command *command, MetaInformationDataset *dat
     }
 
     if (flag == "-a"){
-        Information *metaInfo = information_new();
+        MetaInformation *metaInfo = information_new();
         setDocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
         setAuthor(metaInfo, command_get_arg_por_indice(command, 1));
         setYear(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
