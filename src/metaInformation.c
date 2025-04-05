@@ -1,14 +1,14 @@
 #include "metaInformation.h"
 #include <string.h>
 
-typedef struct Information{
+struct Information{
     int idDocument;         //TODO: temos de definir como vamos catalogar
     char documentTitle[200];
     char author[200];         //separados por ;
     int year;
     char path[64];
     char keywords[64];
-} Information;
+};
 
 Information *information_new(){
     Information *information = g_new0(Information, 1);
@@ -38,7 +38,7 @@ char *getAuthor(Information *info) {
 
 void setAuthor(Information *info, const char *author) {
     strncpy(info->author, author, sizeof(info->author));
-    info->author[sizeof(info->author) - 1] = '\0'; // Ensure null termination
+    info->author[sizeof(info->author) - 1] = '\0'; 
 }
 
 int getYear(Information *info) {
@@ -55,7 +55,7 @@ char *getPath(Information *info) {
 
 void setPath(Information *info, const char *path) {
     strncpy(info->path, path, sizeof(info->path));
-    info->path[sizeof(info->path) - 1] = '\0'; // Ensure null termination
+    info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
 char *getKeywords(Information *info) {
@@ -64,5 +64,9 @@ char *getKeywords(Information *info) {
 
 void setKeywords(Information *info, const char *keywords) {
     strncpy(info->keywords, keywords, sizeof(info->keywords));
-    info->keywords[sizeof(info->keywords) - 1] = '\0'; // Ensure null termination
+    info->keywords[sizeof(info->keywords) - 1] = '\0';
+}
+
+void metaInformation_free(Information *info) {
+    g_free(info); // se tiveres usado g_new ou malloc para o alocar
 }
