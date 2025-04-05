@@ -59,8 +59,26 @@ char *command_get_arg_por_indice(Command *cmd, int indice)
 }
 
 
-
 char *command_get_fifo_client(Command *cmd)
 {
     return cmd->fifo_client;
 }
+
+void command_set_fifo_client(Command *cmd, char *fifo_client) {
+    if (cmd->fifo_client != NULL) {
+        free(cmd->fifo_client);
+    }
+    cmd->fifo_client = strdup(fifo_client);
+}
+
+void command_free(Command *cmd) {
+    if (!cmd) return;
+    free(cmd->flag);
+    for (int i = 0; i < cmd->num_args; i++) {
+        free(cmd->args[i]);
+    }
+    free(cmd->args);
+    free(cmd->fifo_client);
+    free(cmd);
+}
+
