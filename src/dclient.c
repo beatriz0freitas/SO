@@ -7,23 +7,26 @@
 #include "command.h"
 #include "metaInformation.h"
 #include "utils.h"
+#include "message.h"
 
-void sendMessage (MetaInformation *message, Command *command){
-    char *fifo_client = command_get_fifo_client(command);
+
+void sendMessage (Message *message){
+    Command *cmd = message_get_command(message);
+    MetaInformation *metaInfo = message_get_metaInformation(message);
+
+    char *fifo_client = command_get_fifo_client(cmd);
 
     //TODO: pasta fifos
 	int fd_server = open("fifo/dserver", O_WRONLY);
     if (fd_server == -1) {
         perror("Erro ao abrir FIFO do servidor");
-        unlink(fifo_client);
         exit(1);
     }
 
     //TODO: confirmar se pode ser 512;
-    if (write(fd_server, message, sizeof(MetaInformation)) == -1) {
+    if (bufferedWrite(fd_server, metaInfo, sizeof(MetaInformation)) == -1) {
         perror("Erro ao escrever no FIFO do servidor");
         close(fd_server);
-        unlink(fifo_client);
         exit(1);
     }
 
@@ -32,7 +35,6 @@ void sendMessage (MetaInformation *message, Command *command){
 	int fd_client = open(fifo_client, O_RDONLY);
     if (fd_client == -1) {
         perror("Erro ao abrir FIFO do cliente");
-        unlink(fifo_client);
         exit(1);
     }
 
@@ -41,7 +43,6 @@ void sendMessage (MetaInformation *message, Command *command){
     if (bytesRead == -1) {
         perror("Erro ao ler resposta do servidor");
         close(fd_client);
-        unlink(fifo_client);
         exit(1);
     }
 
@@ -53,30 +54,42 @@ void sendMessage (MetaInformation *message, Command *command){
     unlink(fifo_client);
 }
 
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso inválido\n");
         return 1;
     }
 
-    Command *command = command_constroi_de_linha(argc, argv);
+    Command *cmd = command_constroi_de_linha(argc, argv);
+    if (cmd == NULL) {
+        fprintf(stderr, "Erro ao criar comando\n");
+        return 1;
+    }
+
+    MetaInformation *info = metaInformation_new();
+    if (info == NULL) {
+        fprintf(stderr, "Erro ao criar meta informação\n");
+        command_free(cmd);
+        return 1;
+    }
+
+    Message *message = message_new(cmd, info);
 
     char fifo_client[256];
     snprintf(fifo_client, sizeof(fifo_client), "fifo/client_%d", getpid());
 
-    command_set_fifo_client(command, fifo_client);
+    command_set_fifo_client(cmd, fifo_client);
 
+    unlink(fifo_client);
     if (mkfifo(fifo_client, 0666) == -1) {
         perror("Erro ao criar FIFO do cliente");
         exit(1);
     }
 
-    MetaInformation *message = metaInformation_new();
+    sendMessage(message);
 
-    sendMessage(message, command);
-
-    metaInformation_free(message);
-    command_free(command);
+    message_free(message);
     unlink(fifo_client);
     return 0;
 }
