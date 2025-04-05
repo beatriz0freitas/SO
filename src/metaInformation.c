@@ -1,5 +1,6 @@
 #include "metaInformation.h"
 #include <string.h>
+#include <glib.h>
 
 struct Information{
     int idDocument;         //TODO: temos de definir como vamos catalogar
@@ -63,5 +64,5 @@ void setKeywords(Information *info, const char *keywords) {
 }
 
 void metaInformation_free(Information *info) {
-    g_free(info); // se tiveres usado g_new ou malloc para o alocar
+    g_free(info);
 }
