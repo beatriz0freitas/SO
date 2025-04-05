@@ -3,7 +3,7 @@
 #include <string.h>
 
 struct Command {
-    char fifo_client ;   // nome do FIFO de resposa do cliente
+    char *fifo_client ;   // nome do FIFO de resposa do cliente
     char *flag;
     char **args;
     int num_args;
@@ -21,7 +21,6 @@ Command *comando_constroi_de_linha(int numArgs, char *linha[])
         cmd->args = (char **)malloc((numArgs - 2) * sizeof(char *));
 
         if (!cmd->args){
-            printf("Erro ao alocar memória\n");
             exit(1);
         }
 
