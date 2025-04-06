@@ -56,6 +56,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 }
 
 
+//TODO: Ver melhor maneira de apagar
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
     MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
@@ -68,6 +69,8 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     return FALSE;
 }
 
+
+
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
     MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
     if (metaInfo != NULL) {
@@ -77,3 +80,33 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     return NULL;
 }
 
+MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
+
+    int posicao_registo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+    if (posicao_registo == NULL) {
+        return NULL; // Não existe
+    }
+
+    int fd = open(FILENAME, O_RDONLY);
+    if (fd == -1) {
+        perror("Erro ao abrir ficheiro");
+        return NULL;
+    }
+
+   
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
+
+
+    MetaInformation *metaInfo = g_malloc(metaInformation_size()); // Alocar memória para receber a struct
+
+    if (read(fd, metaInfo,  metaInformation_size()) !=  metaInformation_size()) {
+        perror("Erro a ler do ficheiro");
+        g_free(metaInfo);
+        close(fd);
+        return NULL;
+    }
+
+    close(fd);
+
+    return metaInfo;
+}
