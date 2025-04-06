@@ -1,8 +1,13 @@
 #include "metaInformationDataset.h"
 #include <glib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+
+#define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 struct MetaInformationDataset{
-    GHashTable *MetaInformation;
+    GHashTable *MetaInformation; // hastable em que a key é o id do documento e o value é a posição em que está guardado no ficheiro binário
     int nextindex;
 };
 
@@ -15,13 +20,42 @@ MetaInformationDataset *metaInformationDataset_new() {
     return dataset;
 }
 
+
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
+
+    int fd = open(FILENAME, O_CREAT | O_APPEND | O_WRONLY, 0666);
+    if (fd == -1) {
+        perror("Erro ao abrir ficheiro");
+        return -1;
+    }
+
+    off_t posicao_bytes = lseek(fd, 0, SEEK_END); // total de bytes do ficheiro
+    int posicao_registo = posicao_bytes / metaInformation_size(); // posição em que foi inserido o registo
+
+
     int key = dataset->nextindex;
+    
+    metaInformation_set_IdDocument(metaInfo, key); //atualiza o id do documento
+
+
+    // Escrever a struct no ficheiro
+    if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+        perror("Erro a escrever no ficheiro");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+
+    // Inserir na hashtable: key = idDocument, value = posição (em número de structs)
+    g_hash_table_insert(dataset->MetaInformation, (gpointer)key, (gpointer)posicao_registo);
+
     dataset->nextindex++;
-  
-    g_hash_table_insert(dataset->MetaInformation, (gpointer)key, (gpointer)metaInfo);
-    return key;
+
+    return metaInformation_get_IdDocument(metaInfo); // dá return ao id do documento
 }
+
+
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
     MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
