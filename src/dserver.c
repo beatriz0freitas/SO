@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-
-#include "utils.h"
 #include "command.h"
 #include "metaInformation.h"
+#include "executer.h"
+#include "utils.h"
 
 void handleMessage(MetaInformation *mensagem) {
 
@@ -27,13 +27,34 @@ void sendResponse(const char *fifo_cliente, const char *response) {
 }
 
 int main (int argc, char * argv[]){
-    
+
+    Command *command = command_constroi_de_linha(argc, argv);
+
+    Executer *execute = executer_new ();
+    MetaInformationDataset *dataset = metaInformationDataset_new();
+
+
+
+/*
     if (mkfifo("fifo/dserver", 0666) == -1) {
         if (errno != EEXIST) {
             perror("Erro ao criar fifo/dserver");
             exit(1);
         }
     }
+
+*/
+    char* resposta = NULL;
+  
+    resposta = executer(execute, command, dataset);
+
+    if (resposta == NULL) {
+        fprintf(stderr, "Erro ao executar comando\n");
+        return 1;
+    }
+    printf("%s\n", resposta);
+
+    return 0;
     
 }
 
