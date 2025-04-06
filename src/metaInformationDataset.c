@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
 
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
@@ -48,7 +49,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     close(fd);
 
     // Inserir na hashtable: key = idDocument, value = posição (em número de structs)
-    g_hash_table_insert(dataset->MetaInformation, (gpointer)key, (gpointer)posicao_registo);
+    g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(key), GINT_TO_POINTER(posicao_registo));
 
     dataset->nextindex++;
 
@@ -59,9 +60,9 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 //TODO: Ver melhor maneira de apagar
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
-    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
+    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
     if (metaInfo != NULL) {
-        g_hash_table_remove(dataset->MetaInformation, (gpointer)key);
+        g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
         metaInformation_free(metaInfo);
         return TRUE;
     }
@@ -70,20 +71,10 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 }
 
 
-
-MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
-    if (metaInfo != NULL) {
-        return metaInfo;
-    } 
-
-    return NULL;
-}
-
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
 
-    int posicao_registo = g_hash_table_lookup(dataset->MetaInformation, (gpointer)key);
-    if (posicao_registo == NULL) {
+    int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
+    if (value == NULL) {
         return NULL; // Não existe
     }
 
@@ -92,6 +83,9 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
         perror("Erro ao abrir ficheiro");
         return NULL;
     }
+
+    int posicao_registo = *(int *)value;
+
 
    
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
