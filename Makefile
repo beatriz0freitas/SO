@@ -1,6 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -g -Iinclude
-LDFLAGS =
+CFLAGS = $(shell pkg-config --cflags glib-2.0) -Wall -g -Iinclude 
+LDFLAGS = $(shell pkg-config --libs glib-2.0)
+
 
 all: folders dserver dclient
 
@@ -11,14 +12,17 @@ dclient: bin/dclient
 folders:
 	@mkdir -p src include obj bin tmp
 
-bin/dserver: obj/dserver.o
-	$(CC) $(LDFLAGS) $^ -o $@
 
-bin/dclient: obj/dclient.o
-	$(CC) $(LDFLAGS) $^ -o $@
+bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+	$(CC) $^ $(LDFLAGS) -o $@
 
+bin/dclient: obj/dclient.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+	$(CC) $^ $(LDFLAGS) -o $@
+
+
+# Compile the source files into object files
 obj/%.o: src/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 clean:
 	rm -f obj/* tmp/* bin/*
