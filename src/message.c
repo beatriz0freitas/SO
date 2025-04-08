@@ -1,6 +1,7 @@
 #include "message.h"
 
 struct Message{
+    char *fifoclient;
     Command *cmd;
     MetaInformation *info;
 };
@@ -18,6 +19,7 @@ Message *message_new(Command *cmd, MetaInformation *info) {
     }
     msg->cmd = cmd;
     msg->info = info;
+    msg->fifoclient = (char *)malloc(100 * sizeof(char));
     return msg;
 }
 
@@ -39,6 +41,13 @@ void message_set_metaInformation(Message *msg, MetaInformation *info) {
         msg->info = info;
     }
 }
+
+void message_set_fifoClient(Message *msg, char *fifo) {
+    if (msg && fifo) {
+        strncpy(msg->fifoclient, fifo, 100);
+    }
+}
+
 Command *message_get_command(Message *msg) {
     if (msg) {
         return msg->cmd;
@@ -48,6 +57,13 @@ Command *message_get_command(Message *msg) {
 MetaInformation *message_get_metaInformation(Message *msg) {
     if (msg) {
         return msg->info;
+    }
+    return NULL;
+}
+
+char *message_get_fifoClient(Message *msg) {
+    if (msg) {
+        return msg->fifoclient;
     }
     return NULL;
 }

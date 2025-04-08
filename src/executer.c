@@ -13,7 +13,7 @@ Executer *executer_new() {
 
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
-char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset) {
+char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
     char *flag = command_get_flag(command);
     char *resposta = malloc(100 * sizeof(char));
 

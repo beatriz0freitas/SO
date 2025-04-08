@@ -11,10 +11,12 @@
 #include "message.h"
 
 
-void dclient_sendMessage (const char* fifo_serverToClient){
+void dclient_sendMessage (Message* message){
 
     // FIFO para enviar a mensagem para o servidor
     const char *fifo_clientToServer = "../fifos/clientToServer";
+
+    const char *fifo_serverToClient = message_get_fifoClient(message);  // FIFO do cliente para o servidor
 
     // Abre o FIFO do servidor para escrita
     int fd_server = open(fifo_clientToServer, O_WRONLY);
@@ -81,6 +83,8 @@ int main(int argc, char *argv[]) {
     char fifo_serverToClient[256];
     snprintf(fifo_serverToClient, sizeof(fifo_serverToClient), "../fifos/serverToClient_%d", getpid());
 
+    message_set_fifoClient(message, fifo_serverToClient);  // Define o FIFO do cliente na mensagem
+
     // Cria o FIFO para resposta
     unlink(fifo_serverToClient); // Se já existir, apaga antes de criar
     if (mkfifo(fifo_serverToClient, 0666) == -1) {
@@ -89,7 +93,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    dclient_sendMessage (fifo_serverToClient);
+    dclient_sendMessage (message);
 
     // Abre o FIFO do cliente para ler a resposta
     int fd_client = open(fifo_serverToClient, O_RDONLY);
