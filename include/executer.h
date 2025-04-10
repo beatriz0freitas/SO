@@ -5,11 +5,13 @@
 #include "command.h"
 #include "metaInformationDataset.h"
 #include "metaInformation.h"
+#include <string.h> 
+
 
 
 typedef struct Executer Executer;
 
 Executer *executer_new();
-char *executer(Command *command);
+char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset);
 
 #endif

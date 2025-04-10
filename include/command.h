@@ -1,5 +1,5 @@
-#ifndef command
-#define command
+#ifndef COMMAND
+#define COMMAND
 
 #include <stdlib.h>
 #include <string.h>

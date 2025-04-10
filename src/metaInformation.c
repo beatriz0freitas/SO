@@ -40,7 +40,7 @@ char *metaInformation_get_Author(MetaInformation *info) {
 }
 
 void metaInformation_set_Author(MetaInformation *info, const char *author) {
-    memset(info->author, 0, sizeof(info->suthor));
+    memset(info->author, 0, sizeof(info->author));
     strncpy(info->author, author, sizeof(info->author)-1);
     info->author[sizeof(info->author) - 1] = '\0'; 
 }
@@ -76,4 +76,8 @@ void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
 //caso altermos para char* na struct temos de fazer strdup()
 void metaInformation_free(MetaInformation *info) {
     g_free(info);
+}
+
+size_t metaInformation_size() {
+    return sizeof(struct MetaInformation);
 }

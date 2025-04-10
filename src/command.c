@@ -22,7 +22,6 @@ Command *command_constroi_de_linha(int numArgs, char *linha[]) {
     if (numArgs > 2){
         cmd->args = (char **)malloc((numArgs - 2) * sizeof(char *));
         if (!cmd->args){
-            printf("Erro ao alocar memória\n");
             exit(1);
         }
 

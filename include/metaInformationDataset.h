@@ -2,10 +2,10 @@
 #define METAINFORMATIONDATASET_C
 
 #include "metaInformation.h"
-#include <glib/gtypes.h>
+#include <glib.h>
 
 typedef struct MetaInformationDataset MetaInformationDataset;
-MetaInformationDataset *MetaInformationDataset_new();
+MetaInformationDataset *metaInformationDataset_new();
 
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo);

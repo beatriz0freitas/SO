@@ -1,6 +1,9 @@
 #ifndef META_INFORMATION_H
 #define META_INFORMATION_H
 
+
+#include <stdlib.h>
+
 typedef struct MetaInformation MetaInformation;
 
 
@@ -18,6 +21,9 @@ char *metaInformation_get_Path(MetaInformation *info);
 void metaInformation_set_Path(MetaInformation *info, const char *path);
 char *metaInformation_get_Keywords(MetaInformation *info);
 void metaInformation_set_Keywords(MetaInformation *info, const char *keywords);
+
+
+size_t metaInformation_size();
 
 void metaInformation_free(MetaInformation *info);
 
