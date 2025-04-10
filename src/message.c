@@ -6,6 +6,7 @@ struct Message{
     MetaInformation *info;
 };
 
+
 Message *message_new(Command *cmd, MetaInformation *info) {
     if (!cmd || !info) {
         fprintf(stderr, "Command ou MetaInformation inválido.\n");
@@ -66,4 +67,9 @@ char *message_get_fifoClient(Message *msg) {
         return msg->fifoclient;
     }
     return NULL;
+}
+
+size_t message_get_size() {
+
+    return sizeof(struct Message);
 }
