@@ -18,6 +18,7 @@ void message_set_fifoClient(Message *msg, char *fifo);
 Command *message_get_command(Message *msg);
 MetaInformation *message_get_metaInformation(Message *msg);
 char *message_get_fifoClient(Message *msg);
+size_t message_get_size();
 
 
 #endif
