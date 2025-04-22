@@ -44,7 +44,6 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     }
 
     int key = dataset->nextindex;
-    
     metaInformation_set_IdDocument(metaInfo, key); //atualiza o id do documento
 
     // Escrever a struct no ficheiro
@@ -59,9 +58,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 
     // Inserir na hashtable: key = idDocument, value = posição (em número de structs)
     g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(key), GINT_TO_POINTER(posicao_registo));
-
     dataset->nextindex++;
-
     return metaInformation_get_IdDocument(metaInfo); // dá return ao id do documento
 }
 
@@ -128,9 +125,8 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     int posicao_registo = *(int *)value;
 
+
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
-
-
     MetaInformation *metaInfo = g_malloc(metaInformation_size()); // Alocar memória para receber a struct
 
     if (read(fd, metaInfo,  metaInformation_size()) !=  metaInformation_size()) {

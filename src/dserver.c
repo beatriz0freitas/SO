@@ -11,6 +11,10 @@
 #include "executer.h"
 #include "utils.h"
 
+//quem quer ler - SERVIDOR - normalmente cria o fifo
+
+//TODO: responder paralelo
+
 void handleMessage(MetaInformation *mensagem) {
 
 }
@@ -85,6 +89,5 @@ int main(int argc, char *argv[]) {
     return 0;
 
 }
-
 
 
