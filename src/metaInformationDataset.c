@@ -145,3 +145,10 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     return metaInfo;
 }
+
+void metaInformationDataset_free(MetaInformationDataset *dataset) {
+    if (dataset) {
+        g_hash_table_destroy(dataset->MetaInformation);
+        g_free(dataset);
+    }
+}

@@ -10,6 +10,7 @@ MetaInformationDataset *metaInformationDataset_new();
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo);
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key);
-MetaInformation *MetaInformationDataset_consult(MetaInformationDataset *dataset, int key);
+MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key);
 
+void metaInformationDataset_free(MetaInformationDataset *dataset) ;
 #endif

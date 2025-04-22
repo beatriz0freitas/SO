@@ -11,6 +11,11 @@ Executer *executer_new() {
     return executer;
 }
 
+void executer_free(Executer *executer) {
+    if (executer != NULL) {
+        g_free(executer);
+    }
+}
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
 char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {

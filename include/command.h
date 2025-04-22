@@ -31,10 +31,12 @@ typedef struct Command {
 } Command;
 
 CommandFlag command_parse_flag(char *flagStr, int numArgs);
-Command command_constroi_de_linha(int numArgs, char *linha[]);
+Command *command_constroi_de_linha(int numArgs, char *linha[]);
 
 int command_get_num_args(Command *cmd);
 CommandFlag command_get_flag(Command *cmd);
 char *command_get_arg_por_indice(const Command *cmd, int indice);
+
+void command_free(Command *cmd);
 
 #endif
