@@ -2,15 +2,7 @@
 #include <string.h>
 #include <glib.h>
 
-struct MetaInformation{
-    int idDocument;         //TODO: temos de definir como vamos catalogar
-    char documentTitle[200];
-    char author[200];         //separados por ;
-    int year;
-    char path[64];
-    char keywords[64];      //ainda nao sei se vale a pena guardar
-    gboolean isFree;        // se o registo foi eliminado ou não
-};
+
 
 //caso altermos para char* na struct temos de fazer strdup()
 MetaInformation *metaInformation_new(){

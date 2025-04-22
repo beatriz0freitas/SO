@@ -12,6 +12,7 @@ typedef struct MetaInformation{
     int year;
     char path[64];
     char keywords[64];      //ainda nao sei se vale a pena guardar
+    gboolean isFree; 
 } MetaInformation;
 
 MetaInformation *metaInformation_new();
