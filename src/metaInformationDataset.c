@@ -13,7 +13,6 @@ struct MetaInformationDataset{
 };
 
 // NOTA: Falta adicionar a implementação de escrever, apagar e consultar também pra o ficheiro binário em cada uma das funções
-
 MetaInformationDataset *metaInformationDataset_new() {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformation = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -33,11 +32,8 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     off_t posicao_bytes = lseek(fd, 0, SEEK_END); // total de bytes do ficheiro
     int posicao_registo = posicao_bytes / metaInformation_size(); // posição em que foi inserido o registo
 
-
     int key = dataset->nextindex;
-    
     metaInformation_set_IdDocument(metaInfo, key); //atualiza o id do documento
-
 
     // Escrever a struct no ficheiro
     if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
@@ -50,9 +46,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 
     // Inserir na hashtable: key = idDocument, value = posição (em número de structs)
     g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(key), GINT_TO_POINTER(posicao_registo));
-
     dataset->nextindex++;
-
     return metaInformation_get_IdDocument(metaInfo); // dá return ao id do documento
 }
 
@@ -86,11 +80,7 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     int posicao_registo = *(int *)value;
 
-
-   
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
-
-
     MetaInformation *metaInfo = g_malloc(metaInformation_size()); // Alocar memória para receber a struct
 
     if (read(fd, metaInfo,  metaInformation_size()) !=  metaInformation_size()) {
@@ -101,6 +91,5 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     }
 
     close(fd);
-
     return metaInfo;
 }

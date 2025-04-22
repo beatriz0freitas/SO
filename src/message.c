@@ -1,53 +1,43 @@
 #include "message.h"
 
-struct Message{
-    Command *cmd;
-    MetaInformation *info;
-};
 
-Message *message_new(Command *cmd, MetaInformation *info) {
+void message_init(Message *msg, Command *cmd, MetaInformation *info) {
     if (!cmd || !info) {
         fprintf(stderr, "Command ou MetaInformation inválido.\n");
-        return NULL;
+        return;
     }
-    
-    Message *msg = (Message *)malloc(sizeof(Message));
     if (!msg) {
-        perror("Erro ao alocar memória para a mensagem");
-        exit(1);
+        fprintf(stderr, "Mensagem inválida.\n");
+        return;
     }
-    msg->cmd = cmd;
-    msg->info = info;
-    return msg;
-}
-
-void message_free(Message *msg) {
-    if (msg) {
-        command_free(msg->cmd);
-        metaInformation_free(msg->info);
-        free(msg);
-    }
+    msg->cmd = *cmd;
+    msg->info = *info;
+    memset(msg->fifo_client, 0, MAX_FIFO_NAME);  // Inicializar o nome do FIFO
 }
 
 void message_set_command(Message *msg, Command *cmd) {
-    if (msg) {
-        msg->cmd = cmd;
+    if (!msg) {
+        return;
     }
+    msg->cmd = *cmd;
 }
 void message_set_metaInformation(Message *msg, MetaInformation *info) {
-    if (msg) {
-        msg->info = info;
+    if (!msg) {
+        return;
     }
+    msg->info = *info;
 }
+
 Command *message_get_command(Message *msg) {
     if (msg) {
-        return msg->cmd;
+        return &msg->cmd;
     }
     return NULL;
 }
+
 MetaInformation *message_get_metaInformation(Message *msg) {
     if (msg) {
-        return msg->info;
+        return &msg->info;
     }
     return NULL;
 }
