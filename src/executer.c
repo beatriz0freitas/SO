@@ -59,7 +59,11 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
 
         case CMD_DELETE: {
             int id = atoi(command_get_arg_por_indice(command, 0));
-            //TODO
+            if (metaInformationDataset_remove(dataset, id)) {
+                sprintf(resposta, "Index entry %d deleted", id);
+            } else {
+                strcpy(resposta, "Entry not found");
+            }
             break;
         }
 
