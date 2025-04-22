@@ -9,11 +9,13 @@ struct MetaInformation{
     int year;
     char path[64];
     char keywords[64];      //ainda nao sei se vale a pena guardar
+    gboolean isFree;        // se o registo foi eliminado ou não
 };
 
 //caso altermos para char* na struct temos de fazer strdup()
 MetaInformation *metaInformation_new(){
     MetaInformation *information = g_new0(MetaInformation, 1);
+    information->isFree = FALSE; 
     return information;
 }
 
@@ -80,4 +82,13 @@ void metaInformation_free(MetaInformation *info) {
 
 size_t metaInformation_size() {
     return sizeof(struct MetaInformation);
+}
+
+void metaInformation_mark_as_deleted(MetaInformation *info){
+    info->isFree = TRUE;
+    return;
+}
+
+gboolean metaInformation_is_deleted(MetaInformation *info){
+    return info->isFree;
 }

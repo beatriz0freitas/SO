@@ -12,6 +12,6 @@
 typedef struct Executer Executer;
 
 Executer *executer_new();
-char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset);
+char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset);
 
 #endif

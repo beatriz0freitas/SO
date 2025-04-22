@@ -9,17 +9,19 @@
 
 struct MetaInformationDataset{
     GHashTable *MetaInformation; // hastable em que a key é o id do documento e o value é a posição em que está guardado no ficheiro binário
+    GQueue *MetaInformationQueue; // Queue para guardar posições livres
     int nextindex;
 };
 
-// NOTA: Falta adicionar a implementação de escrever, apagar e consultar também pra o ficheiro binário em cada uma das funções
 
 MetaInformationDataset *metaInformationDataset_new() {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformation = g_hash_table_new(g_direct_hash, g_direct_equal);
+    dataset->MetaInformationQueue = g_queue_new();
     dataset->nextindex = 1;
     return dataset;
 }
+
 
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
@@ -31,15 +33,22 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     }
 
     off_t posicao_bytes = lseek(fd, 0, SEEK_END); // total de bytes do ficheiro
-    int posicao_registo = posicao_bytes / metaInformation_size(); // posição em que foi inserido o registo
+    int posicao_registo;
 
+
+    if (g_queue_is_empty(dataset->MetaInformationQueue)) {
+        posicao_registo = (posicao_bytes / metaInformation_size()); // posição em que será inserido o registo
+    } else {
+        // Se a queue não estiver vazia, retiramos uma posição livre
+        posicao_registo = GPOINTER_TO_INT(g_queue_pop_head(dataset->MetaInformationQueue));
+    }
 
     int key = dataset->nextindex;
     
     metaInformation_set_IdDocument(metaInfo, key); //atualiza o id do documento
 
-
     // Escrever a struct no ficheiro
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
     if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro a escrever no ficheiro");
         close(fd);
@@ -57,19 +66,52 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 }
 
 
-//TODO: Ver melhor maneira de apagar
-
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
-    MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
-    if (metaInfo != NULL) {
-        g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
-        metaInformation_free(metaInfo);
-        return TRUE;
+
+    int posicao = -1;
+    posicao = GPOINTER_TO_INT(g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key)));
+
+    if (posicao == -1) {
+        return FALSE; // Não existe
     }
 
-    return FALSE;
-}
+    int fd = open(FILENAME, O_RDWR);
+    if (fd == -1) {
+        perror("Erro ao abrir ficheiro");
+        return FALSE;
+    }
+    
+    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
+    
+    MetaInformation *metaInfo = metaInformation_new(); // Alocar memória para receber a struct
+    if (read(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+        perror("Erro ao ler do ficheiro");
+        g_free(metaInfo);
+        close(fd);
+        return FALSE;
+    }
+    
+    metaInformation_mark_as_deleted(metaInfo);
+    
+    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
 
+    if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+        perror("Erro ao escrever no ficheiro");
+        g_free(metaInfo);
+        close(fd);
+        return FALSE;
+    }
+    
+    close(fd);
+    
+    // Atualiza dataset
+    g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao));
+
+    g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
+    g_free(metaInfo);
+    
+        return TRUE;
+    }
 
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
 
@@ -86,8 +128,6 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     int posicao_registo = *(int *)value;
 
-
-   
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
 
 
@@ -101,6 +141,11 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     }
 
     close(fd);
+
+    if (metaInformation_is_deleted(metaInfo)) {
+        g_free(metaInfo);
+        return NULL; // O documento foi marcado como eliminado
+    }
 
     return metaInfo;
 }

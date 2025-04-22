@@ -3,6 +3,7 @@
 
 
 #include <stdlib.h>
+#include <glib.h>
 
 typedef struct MetaInformation MetaInformation;
 
@@ -21,7 +22,8 @@ char *metaInformation_get_Path(MetaInformation *info);
 void metaInformation_set_Path(MetaInformation *info, const char *path);
 char *metaInformation_get_Keywords(MetaInformation *info);
 void metaInformation_set_Keywords(MetaInformation *info, const char *keywords);
-
+void metaInformation_mark_as_deleted(MetaInformation *info);
+gboolean metaInformation_is_deleted(MetaInformation *info);
 
 size_t metaInformation_size();
 
