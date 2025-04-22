@@ -14,37 +14,83 @@ Executer *executer_new() {
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
 char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset) {
-    char *flag = command_get_flag(command);
-    char *resposta = malloc(100 * sizeof(char));
+    CommandFlag flag = command_get_flag(command);
+    char resposta[100];
+    memset(resposta, 0, sizeof(resposta));
 
-    if (flag == NULL) {
-        return NULL;
+    if (flag == CMD_INVALID) {
+        return "Flag inválida";
     }
 
-    if (strcmp(flag, "-a") == 0){
-        MetaInformation *metaInfo = metaInformation_new();
-        printf("%s ", command_get_arg_por_indice(command, 0));
-        printf("%s ", command_get_arg_por_indice(command, 1));
-        printf("%s ", command_get_arg_por_indice(command, 2));
-        printf("%s ", command_get_arg_por_indice(command, 3));
-        metaInformation_set_DocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
-        metaInformation_set_Author(metaInfo, command_get_arg_por_indice(command, 1));
-        metaInformation_set_Year(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
-        metaInformation_set_Path(metaInfo, command_get_arg_por_indice(command, 3));
+    switch(flag) {
+        case CMD_ADD: {
+            MetaInformation *metaInfo = metaInformation_new();
+            printf("%s ", command_get_arg_por_indice(command, 0));
+            printf("%s ", command_get_arg_por_indice(command, 1));
+            printf("%s ", command_get_arg_por_indice(command, 2));
+            printf("%s ", command_get_arg_por_indice(command, 3));
 
-        int index = metaInformationDataset_add(dataset, metaInfo);
+            metaInformation_set_DocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
+            metaInformation_set_Author(metaInfo, command_get_arg_por_indice(command, 1));
+            metaInformation_set_Year(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
+            metaInformation_set_Path(metaInfo, command_get_arg_por_indice(command, 3));
 
-        sprintf(resposta, "\nficheiro foi indexado com sucesso no indice %d", index); //DUVIDA NAO SEI SE PODEMOS USAR
+            int index = metaInformationDataset_add(dataset, metaInfo);
+
+            sprintf(resposta, "\nficheiro foi indexado com sucesso no indice %d", index);
+            break;
+        }
+
+        case CMD_CONSULT: {
+            int id = atoi(command_get_arg_por_indice(command, 0));
+            MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
+            
+            if (metaInfo != NULL) {
+                sprintf(resposta, "Title: %s\nAuthors: %s\nYear: %d\nPath: %s",
+                        metaInformation_get_DocumentTitle(metaInfo),
+                        metaInformation_get_Author(metaInfo),
+                        metaInformation_get_Year(metaInfo),
+                        metaInformation_get_Path(metaInfo));
+            } else {
+                strcpy(resposta, "Document not found"); //confirmar se posso
+            }
+            break;
+        }
+
+        case CMD_DELETE: {
+            int id = atoi(command_get_arg_por_indice(command, 0));
+            //TODO
+            break;
+        }
+
+        case CMD_LIST: {
+            int id = atoi(command_get_arg_por_indice(command, 0));
+            char *keyword = command_get_arg_por_indice(command, 1);
+            //TODO
+            break;
+        }
+
+        case CMD_SEARCH: {
+            char *keyword = command_get_arg_por_indice(command, 0);
+            //TODO
+            break;
+        }
+
+        case CMD_SEARCH_PROCESSOS: {
+            char *keyword = command_get_arg_por_indice(command, 0);
+            int num_processos = atoi(command_get_arg_por_indice(command, 1));
+            //TODO
+            break;
+        }
+
+        case CMD_SHUTDOWN: {
+            //TODO: fechar todos os pipes, mensagem para o filho fechar
+            break;
+        }
+
+        default:
+            return "Comando inválido";
     }
-    if (strcmp(flag, "-c") == 0){
-        resposta = "ficheiro foi consultado com sucesso";
-        //
-    }
-    if (strcmp(flag, "-d") == 0){
-        resposta = "ficheiro foi apagado com sucesso";
-        //
-    }
-    
     executer->num_executions++;
     return resposta;
 }

@@ -13,6 +13,7 @@
 
 //quem quer ler - SERVIDOR - normalmente cria o fifo
 
+//TODO: responder paralelo
 
 void handleMessage(MetaInformation *mensagem) {
 
