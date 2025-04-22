@@ -11,9 +11,14 @@ Executer *executer_new() {
     return executer;
 }
 
+void executer_free(Executer *executer) {
+    if (executer != NULL) {
+        g_free(executer);
+    }
+}
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
-char *executer(Executer *executer, Command *command, MetaInformationDataset *dataset) {
+char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
     CommandFlag flag = command_get_flag(command);
     char resposta[100];
     memset(resposta, 0, sizeof(resposta));

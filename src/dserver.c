@@ -6,36 +6,53 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "command.h"
-#include "metaInformation.h"
 #include "executer.h"
+#include "message.h"
 #include "utils.h"
 
 //quem quer ler - SERVIDOR - normalmente cria o fifo
 
+
 //TODO: responder paralelo
-
-void handleMessage(MetaInformation *mensagem) {
-
-}
 
 void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta) {
 
-        // Abre o FIFO do cliente para responder
-        int fd_client = open(fifo_serverToClient, O_WRONLY);
-        if (fd_client == -1) {
-            perror("Erro ao abrir FIFO do cliente para resposta");
-            // falta fechar o fd sever se der erro;
-        }
+    // Abre o FIFO do cliente para responder
+    int fd_client = open(fifo_serverToClient, O_WRONLY);
+    if (fd_client == -1) {
+        perror("Erro ao abrir FIFO do cliente para resposta");
+        // falta fechar o fd sever se der erro;
+        exit(1);
+    }
 
-        //TODO: testar com o bufferedWrite
-        write(fd_client, resposta, strlen(resposta) + 1);
-
-        // Fecha os descritores do cliente
-        close(fd_client);
+    //TODO: testar com o bufferedWrite
+    write(fd_client, resposta, strlen(resposta) + 1);
+    close(fd_client);
 }
-int main(int argc, char *argv[]) {
 
+void dserver_handleMessage(Message *msg, Executer *executer, MetaInformationDataset *dataset) {
+    Command *cmd = message_get_command(msg);
+    MetaInformation *info = message_get_metaInformation(msg);
+
+    if (cmd == NULL || info == NULL) {
+        fprintf(stderr, "Comando ou MetaInformation inválido.\n");
+        exit(1);
+    }
+
+    char resposta[100];
+    memset(resposta, 0, sizeof(resposta));
+
+    // Executa o comando
+    char *resposta_executer = executer_execute(executer, cmd, dataset);
+    if (resposta_executer != NULL) {
+        strncpy(resposta, resposta_executer, sizeof(resposta) - 1);
+    }
+
+    dserver_sendResponse(msg->fifo_client, resposta);
+}
+
+
+int main(int argc, char *argv[]) {
     const char *fifo_clientToServer = "../fifos/clientToServer"; // FIFO para o servidor ler as mensagens dos clientes
 
     // Cria FIFO do servidor (FIFO de leitura do cliente)
@@ -45,7 +62,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    printf("Servidor aguardando clientes...\n");
+    Executer *executer = executer_new();
+    MetaInformationDataset *dataset = metaInformationDataset_new();
 
     while (1) {
         int fd_server = open(fifo_clientToServer, O_RDONLY);
@@ -54,38 +72,30 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
-        char buffer[512]; // Buffer para ler a mensagem do cliente
-        ssize_t nbytes = read(fd_server, buffer, sizeof(buffer));
+        Message mensagem;
+        ssize_t nbytes = read(fd_server, &mensagem, sizeof(Message));
 
         if (nbytes <= 0) {
             perror("Erro ao ler do FIFO do servidor");
             close(fd_server);
             continue;
         }
-        buffer[nbytes] = '\0'; // garante que é uma string
 
-        // Agora sim: separar nome do FIFO e mensagem
-        char *fifo_serverToClient = strtok(buffer, " \n");
-        char *mensagem = strtok(NULL, "\n");
-
-        if (fifo_serverToClient == NULL || mensagem == NULL) {
-            fprintf(stderr, "Mensagem inválida recebida: '%s'\n", buffer);
+        if (nbytes != sizeof(Message)) {
+            fprintf(stderr, "Mensagem inválida recebida. Tamanho esperado: %lu, tamanho lido: %lu\n", sizeof(Message), nbytes);
             close(fd_server);
+            continue;
         }
 
-        printf("Servidor recebeu: '%s' (responder para FIFO '%s')\n", mensagem, fifo_serverToClient);
-
-
-
-        // Responde para o cliente
-        const char *resposta = "Mensagem recebida com sucesso!";
-
-        dserver_sendResponse(fifo_serverToClient, resposta);
+        dserver_handleMessage(&mensagem, executer, dataset);
 
         close(fd_server);
     }
 
     unlink(fifo_clientToServer);  // Deleta o FIFO do servidor quando terminar (não chega aqui por causa do while(1))
+    executer_free(executer);
+    metaInformationDataset_free(dataset);
+    
     return 0;
 
 }

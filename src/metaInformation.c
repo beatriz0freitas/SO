@@ -64,11 +64,12 @@ void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
     info->keywords[sizeof(info->keywords) - 1] = '\0';
 }
 
-//caso altermos para char* na struct temos de fazer strdup()
-void metaInformation_free(MetaInformation *info) {
-    g_free(info);
-}
-
 size_t metaInformation_size() {
     return sizeof(struct MetaInformation);
+}
+
+void metaInformation_free(MetaInformation *info) {
+    if (info) {
+        g_free(info);
+    }
 }
