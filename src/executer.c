@@ -20,29 +20,31 @@ void executer_free(Executer *executer) {
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
 char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
     CommandFlag flag = command_get_flag(command);
+    
     char resposta[100];
     memset(resposta, 0, sizeof(resposta));
 
     if (flag == CMD_INVALID) {
-        return "Flag inválida";
+        snprintf(resposta, sizeof(resposta), "Flag inválida");
+        exit(1);
     }
 
     switch(flag) {
         case CMD_ADD: {
-            MetaInformation *metaInfo = metaInformation_new();
+            MetaInformation metaInfo = metaInformation_new();
             printf("%s ", command_get_arg_por_indice(command, 0));
             printf("%s ", command_get_arg_por_indice(command, 1));
             printf("%s ", command_get_arg_por_indice(command, 2));
             printf("%s ", command_get_arg_por_indice(command, 3));
 
-            metaInformation_set_DocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
-            metaInformation_set_Author(metaInfo, command_get_arg_por_indice(command, 1));
-            metaInformation_set_Year(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
-            metaInformation_set_Path(metaInfo, command_get_arg_por_indice(command, 3));
+            metaInformation_set_DocumentTitle(&metaInfo, command_get_arg_por_indice(command, 0));
+            metaInformation_set_Author(&metaInfo, command_get_arg_por_indice(command, 1));
+            metaInformation_set_Year(&metaInfo, atoi(command_get_arg_por_indice(command, 2)));
+            metaInformation_set_Path(&metaInfo, command_get_arg_por_indice(command, 3));
 
-            int index = metaInformationDataset_add(dataset, metaInfo);
+            int index = metaInformationDataset_add(dataset, &metaInfo);
 
-            sprintf(resposta, "\nficheiro foi indexado com sucesso no indice %d", index);
+            snprintf(resposta, sizeof(resposta), "\nficheiro foi indexado com sucesso no indice %d", index);
             break;
         }
 
@@ -51,13 +53,13 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
             MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
             
             if (metaInfo != NULL) {
-                sprintf(resposta, "Title: %s\nAuthors: %s\nYear: %d\nPath: %s",
+                snprintf(resposta, sizeof(resposta), "Title: %s\nAuthors: %s\nYear: %d\nPath: %s",
                         metaInformation_get_DocumentTitle(metaInfo),
                         metaInformation_get_Author(metaInfo),
                         metaInformation_get_Year(metaInfo),
                         metaInformation_get_Path(metaInfo));
             } else {
-                strcpy(resposta, "Document not found"); //confirmar se posso
+                snprintf(resposta, sizeof(resposta), "Document not found"); //confirmar se posso
             }
             break;
         }

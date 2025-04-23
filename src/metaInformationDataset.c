@@ -57,7 +57,6 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     MetaInformation *metaInfo = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
     if (metaInfo != NULL) {
         g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
-        metaInformation_free(metaInfo);
         return TRUE;
     }
 

@@ -9,8 +9,8 @@ MetaInformation metaInformation_new(){
     return information;
 }
 
-int metaInformation_get_IdDocument(MetaInformation info) {
-    return info.idDocument;
+int metaInformation_get_IdDocument(MetaInformation *info) {
+    return info->idDocument;
 }
 
 void metaInformation_set_IdDocument(MetaInformation *info, int id) {
@@ -26,8 +26,8 @@ void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title)
     strncpy(info->documentTitle, title, sizeof(info->documentTitle)-1);
 }
 
-char *metaInformation_get_Author(MetaInformation info) {
-    return info.author;
+char *metaInformation_get_Author(MetaInformation *info) {
+    return info->author;
 }
 
 void metaInformation_set_Author(MetaInformation *info, const char *author) {
@@ -36,16 +36,16 @@ void metaInformation_set_Author(MetaInformation *info, const char *author) {
     info->author[sizeof(info->author) - 1] = '\0'; 
 }
 
-int metaInformation_get_Year(MetaInformation info) {
-    return info.year;
+int metaInformation_get_Year(MetaInformation *info) {
+    return info->year;
 }
 
 void metaInformation_set_Year(MetaInformation *info, int year) {
     info->year = year;
 }
 
-char *metaInformation_get_Path(MetaInformation info) {
-    return info.path;
+char *metaInformation_get_Path(MetaInformation *info) {
+    return info->path;
 }
 
 void metaInformation_set_Path(MetaInformation *info, const char *path) {
@@ -53,8 +53,8 @@ void metaInformation_set_Path(MetaInformation *info, const char *path) {
     strncpy(info->path, path, sizeof(info->path)-1);
 }
 
-char *metaInformation_get_Keywords(MetaInformation info) {
-    return info.keywords;
+char *metaInformation_get_Keywords(MetaInformation *info) {
+    return info->keywords;
 }
 
 void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {

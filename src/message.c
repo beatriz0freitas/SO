@@ -15,12 +15,6 @@ void message_init(Message *msg, Command *cmd, MetaInformation *info) {
     memset(msg->fifo_client, 0, MAX_FIFO_NAME);  // Inicializar o nome do FIFO
 }
 
-Message *message_new(Command *cmd, MetaInformation *info) {
-    Message msg;
-    message_init(&msg, cmd, info);
-    return &msg;
-}
-
 void message_set_command(Message *msg, Command *cmd) {
     if (msg && cmd) 
         msg->cmd = *cmd;

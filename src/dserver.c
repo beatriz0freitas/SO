@@ -26,7 +26,10 @@ void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta)
     }
 
     //TODO: testar com o bufferedWrite
-    ssize_t nbytes = bufferedWrite(fd_client, resposta, strlen(resposta) + 1);
+    if (bufferedWrite(fd_client, resposta, strlen(resposta) + 1) == -1) {
+        perror("Erro ao enviar resposta");
+    }
+    
     close(fd_client);
 }
 
