@@ -3,13 +3,14 @@
 #include <glib.h>
 
 //caso altermos para char* na struct temos de fazer strdup()
-MetaInformation *metaInformation_new(){
-    MetaInformation *information = g_new0(MetaInformation, 1);
+MetaInformation metaInformation_new(){
+    MetaInformation information;
+    memset(&information, 0, sizeof(MetaInformation));
     return information;
 }
 
-int metaInformation_get_IdDocument(MetaInformation *info) {
-    return info->idDocument;
+int metaInformation_get_IdDocument(MetaInformation info) {
+    return info.idDocument;
 }
 
 void metaInformation_set_IdDocument(MetaInformation *info, int id) {
@@ -23,11 +24,10 @@ char *metaInformation_get_DocumentTitle(MetaInformation *info) {
 void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title) {
     memset(info->documentTitle, 0, sizeof(info->documentTitle));
     strncpy(info->documentTitle, title, sizeof(info->documentTitle)-1);
-    info->documentTitle[sizeof(info->documentTitle) - 1] = '\0'; // Ensure null termination
 }
 
-char *metaInformation_get_Author(MetaInformation *info) {
-    return info->author;
+char *metaInformation_get_Author(MetaInformation info) {
+    return info.author;
 }
 
 void metaInformation_set_Author(MetaInformation *info, const char *author) {
@@ -36,26 +36,25 @@ void metaInformation_set_Author(MetaInformation *info, const char *author) {
     info->author[sizeof(info->author) - 1] = '\0'; 
 }
 
-int metaInformation_get_Year(MetaInformation *info) {
-    return info->year;
+int metaInformation_get_Year(MetaInformation info) {
+    return info.year;
 }
 
 void metaInformation_set_Year(MetaInformation *info, int year) {
     info->year = year;
 }
 
-char *metaInformation_get_Path(MetaInformation *info) {
-    return info->path;
+char *metaInformation_get_Path(MetaInformation info) {
+    return info.path;
 }
 
 void metaInformation_set_Path(MetaInformation *info, const char *path) {
     memset(info->path, 0, sizeof(info->path));
     strncpy(info->path, path, sizeof(info->path)-1);
-    info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
-char *metaInformation_get_Keywords(MetaInformation *info) {
-    return info->keywords;
+char *metaInformation_get_Keywords(MetaInformation info) {
+    return info.keywords;
 }
 
 void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
@@ -66,10 +65,4 @@ void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
 
 size_t metaInformation_size() {
     return sizeof(struct MetaInformation);
-}
-
-void metaInformation_free(MetaInformation *info) {
-    if (info) {
-        g_free(info);
-    }
 }

@@ -26,11 +26,16 @@ void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta)
     }
 
     //TODO: testar com o bufferedWrite
-    write(fd_client, resposta, strlen(resposta) + 1);
+    ssize_t nbytes = bufferedWrite(fd_client, resposta, strlen(resposta) + 1);
     close(fd_client);
 }
 
 void dserver_handleMessage(Message *msg, Executer *executer, MetaInformationDataset *dataset) {
+    if (!msg) {
+        fprintf(stderr, "Mensagem nula recebida.\n");
+        return;
+    }
+
     Command *cmd = message_get_command(msg);
     MetaInformation *info = message_get_metaInformation(msg);
 
@@ -53,7 +58,7 @@ void dserver_handleMessage(Message *msg, Executer *executer, MetaInformationData
 
 
 int main(int argc, char *argv[]) {
-    const char *fifo_clientToServer = "../fifos/clientToServer"; // FIFO para o servidor ler as mensagens dos clientes
+    char *fifo_clientToServer = "../fifos/clientToServer"; // FIFO para o servidor ler as mensagens dos clientes
 
     // Cria FIFO do servidor (FIFO de leitura do cliente)
     unlink(fifo_clientToServer); // Se já existir, apaga antes de criar
@@ -73,10 +78,16 @@ int main(int argc, char *argv[]) {
         }
 
         Message mensagem;
-        ssize_t nbytes = read(fd_server, &mensagem, sizeof(Message));
+        ssize_t nbytes = bufferedRead(fd_server, &mensagem, sizeof(Message));
 
-        if (nbytes <= 0) {
-            perror("Erro ao ler do FIFO do servidor");
+        if (nbytes == 0) {
+            // Nenhum dado lido → cliente fechou o FIFO
+            close(fd_server);
+            continue;
+        }
+
+        if (nbytes < 0) {
+            perror("Erro ao ler do FIFO");
             close(fd_server);
             continue;
         }

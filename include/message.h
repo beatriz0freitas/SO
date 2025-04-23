@@ -24,6 +24,4 @@ void message_set_metaInformation(Message *msg, MetaInformation *info);
 Command *message_get_command(Message *msg);
 MetaInformation *message_get_metaInformation(Message *msg);
 
-void message_free(Message *msg);
-
 #endif

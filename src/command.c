@@ -16,7 +16,7 @@ CommandFlag command_parse_flag(char *flagStr, int numArgs) {
     return CMD_INVALID;
 }
 
-Command *command_constroi_de_linha(int numArgs, char *linha[]) {
+Command command_constroi_de_linha(int numArgs, char *linha[]) {
 
     Command cmd;
     memset(&cmd, 0, sizeof(Command));
@@ -26,11 +26,12 @@ Command *command_constroi_de_linha(int numArgs, char *linha[]) {
 
         for (int i = 2; i < numArgs && cmd.num_args < MAX_ARGS; i++) {
             strncpy(cmd.args[cmd.num_args], linha[i], MAX_ARG_SIZE - 1);
+            cmd.args[cmd.num_args][MAX_ARG_SIZE - 1] = '\0'; // Garantir que a string está terminada
             cmd.num_args++;
         }
         cmd.flag = command_parse_flag(linha[1], cmd.num_args);
     }
-    return &cmd;
+    return cmd;
 }
 
 
@@ -42,14 +43,8 @@ CommandFlag command_get_flag(Command *cmd) {
     return cmd->flag;
 }
 
-char *command_get_arg_por_indice(const Command *cmd, int indice) {
+char *command_get_arg_por_indice(Command *cmd, int indice) {
     if (indice < 0 || indice >= cmd->num_args) 
         return NULL;
     return cmd->args[indice];
-}
-
-void command_free(Command *cmd) {
-    if (cmd) {
-        free(cmd);
-    }
 }

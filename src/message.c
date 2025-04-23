@@ -3,7 +3,7 @@
 
 void message_init(Message *msg, Command *cmd, MetaInformation *info) {
     if (!cmd || !info) {
-        fprintf(stderr, "Command ou MetaInformation inválido.\n");
+        fprintf(stderr, "Command ou MetaInformation inválido ao iniciar mensagem.\n");
         return;
     }
     if (!msg) {
@@ -22,16 +22,12 @@ Message *message_new(Command *cmd, MetaInformation *info) {
 }
 
 void message_set_command(Message *msg, Command *cmd) {
-    if (!msg) {
-        return;
-    }
-    msg->cmd = *cmd;
+    if (msg && cmd) 
+        msg->cmd = *cmd;
 }
 void message_set_metaInformation(Message *msg, MetaInformation *info) {
-    if (!msg) {
-        return;
-    }
-    msg->info = *info;
+    if (msg && info) 
+        msg->info = *info;
 }
 
 Command *message_get_command(Message *msg) {
@@ -46,11 +42,4 @@ MetaInformation *message_get_metaInformation(Message *msg) {
         return &msg->info;
     }
     return NULL;
-}
-
-void message_free(Message *msg) {
-    if (msg) {
-        free(msg->fifo_client);
-        free(msg);
-    }
 }
