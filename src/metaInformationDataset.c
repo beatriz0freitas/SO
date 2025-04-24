@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include "utils.h"
 
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
@@ -123,7 +124,7 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
         return NULL;
     }
 
-    int posicao_registo = *(int *)value;
+    int posicao_registo = GPOINTER_TO_INT(value);
 
 
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
@@ -145,6 +146,65 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     return metaInfo;
 }
+
+int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword) {
+    MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
+
+    if (!metaInfo || metaInformation_is_deleted(metaInfo)) {
+        return -1;
+    }
+
+    const char *path = metaInformation_get_Path(metaInfo);
+    int pipefd[2];
+
+    if (pipe(pipefd) == -1) {
+        perror("Erro ao criar pipe");
+        metaInformation_free(metaInfo);
+        return -1;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("Erro ao criar processo filho");
+        close(pipefd[0]);
+        close(pipefd[1]);
+        metaInformation_free(metaInfo);
+        return -1;
+    }
+
+    if (pid == 0) {  // Processo filho
+       
+        close(pipefd[0]);               // Fecha leitura
+        dup2(pipefd[1], STDOUT_FILENO); // Redireciona stdout para o pipe
+        close(pipefd[1]);
+
+        
+        const char *comando = g_strdup_printf("grep -c %s %s", keyword, path); // Executar grep -c "keyword" path
+        mysystem(comando);
+        perror("Erro ao executar grep");
+        exit(1); // Se exec falhar
+    }
+
+    // Processo pai
+    close(pipefd[1]); // Fecha escrita
+
+    char buffer[64];
+    ssize_t nbytes = read(pipefd[0], buffer, sizeof(buffer) - 1);
+    if (nbytes < 0) {
+        perror("Erro ao ler do pipe");
+        close(pipefd[0]);
+        metaInformation_free(metaInfo);
+        return -1;
+    }
+    buffer[nbytes] = '\0';
+
+    close(pipefd[0]);
+    metaInformation_free(metaInfo);
+
+    int count = atoi(buffer); // Converte a string recebida em int
+    return count;
+}
+
 
 void metaInformationDataset_free(MetaInformationDataset *dataset) {
     if (dataset) {

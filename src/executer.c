@@ -20,11 +20,10 @@ void executer_free(Executer *executer) {
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
 char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
     CommandFlag flag = command_get_flag(command);
-    char resposta[100];
-    memset(resposta, 0, sizeof(resposta));
+    char *resposta = g_new(char, 100);
 
     if (flag == CMD_INVALID) {
-        return "Flag inválida";
+        return "Comando inválido";
     }
 
     switch(flag) {
@@ -40,9 +39,16 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
             metaInformation_set_Year(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
             metaInformation_set_Path(metaInfo, command_get_arg_por_indice(command, 3));
 
-            int index = metaInformationDataset_add(dataset, metaInfo);
+            int index = -1;
 
+            index = metaInformationDataset_add(dataset, metaInfo);
+
+            if (index == -1) {
+                metaInformation_free(metaInfo);
+                sprintf(resposta, "\nNão foi possível introduzir o ficheiro no índice");
+            }else{
             sprintf(resposta, "\nficheiro foi indexado com sucesso no indice %d", index);
+        }
             break;
         }
 
@@ -75,7 +81,12 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         case CMD_LIST: {
             int id = atoi(command_get_arg_por_indice(command, 0));
             char *keyword = command_get_arg_por_indice(command, 1);
-            //TODO
+            int count = metaInformationDataset_count_keyword_lines(dataset, id, keyword);
+            if (count != -1) {
+                sprintf(resposta, "Keyword '%s' found %d times in document with ID %d", keyword, count, id);
+            } else {
+                strcpy(resposta, "Error counting keyword occurrences");
+            }
             break;
         }
 
