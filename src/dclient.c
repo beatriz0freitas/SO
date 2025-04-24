@@ -15,22 +15,24 @@ void dclient_sendMessage (const char* fifo_serverToClient, Message *msg) {
     // FIFO para enviar a mensagem para o servidor
     const char *fifo_clientToServer = "../fifos/clientToServer";
 
-    strncpy(msg->fifo_client, fifo_serverToClient, sizeof(msg->fifo_client) - 1);
-
     // Abre o FIFO do servidor para escrita
     int fd_server = open(fifo_clientToServer, O_WRONLY);
     if (fd_server == -1) {
         perror("Erro ao abrir fifo_server para escrita");
+        unlink(fifo_serverToClient);
         exit(1);
     }
 
     ssize_t bytesWritten = bufferedWrite(fd_server, msg, sizeof(Message));
     if (bytesWritten != sizeof(Message)) {
-        fprintf(stderr, "Erro ao escrever a mensagem completa para o servidor\n");
+        fprintf(stderr, "[CLIENTE] Erro ao escrever a mensagem completa para o servidor\n");
+        close(fd_server);
+        unlink(fifo_serverToClient);
+        exit(1);
     }
 
     close(fd_server);  // Fecha o FIFO do servidor após enviar a mensagem
-
+    printf("[CLIENTE] Mensagem enviada para o servidor\n");
 }
 
 void dclient_receiveMessage (const char* fifo_serverToClient) {
@@ -46,16 +48,13 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
     ssize_t bytesRead = bufferedRead(fd_client, buffer, sizeof(buffer)-1);
     if (bytesRead == -1) {
         perror("Erro ao ler resposta do servidor");
-        close(fd_client);
-        unlink(fifo_serverToClient);
-        exit(1);
     }
 
-    buffer[bytesRead] = '\0';
-    printf("Resposta do servidor: %s\n", buffer);
+    printf("[CLIENTE] Resposta do servidor: %s\n", buffer);
 
-    close(fd_client);
+    close(fd_client); 
     unlink(fifo_serverToClient);
+
 }
 
 
@@ -67,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     Command cmd = command_constroi_de_linha(argc, argv);
     if (cmd.flag == CMD_INVALID) {
-        fprintf(stderr, "Erro ao criar comando\n");
+        fprintf(stderr, "Comando inválido\n");
         exit(1);
     }
 
@@ -86,6 +85,7 @@ int main(int argc, char *argv[]) {
 
     Message message;
     message_init(&message, &cmd, &info);
+    strncpy(message.fifo_client, fifo_serverToClient, sizeof(message.fifo_client) - 1);
 
     dclient_sendMessage (fifo_serverToClient, &message);
     dclient_receiveMessage (fifo_serverToClient);

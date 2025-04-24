@@ -21,11 +21,10 @@ void executer_free(Executer *executer) {
 char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
     CommandFlag flag = command_get_flag(command);
     
-    char resposta[100];
-    memset(resposta, 0, sizeof(resposta));
+    char *resposta = g_new(char, 100);
 
     if (flag == CMD_INVALID) {
-        snprintf(resposta, sizeof(resposta), "Flag inválida");
+        sprintf(resposta, "Flag inválida");
         exit(1);
     }
 
@@ -44,7 +43,11 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
 
             int index = metaInformationDataset_add(dataset, &metaInfo);
 
-            snprintf(resposta, sizeof(resposta), "\nficheiro foi indexado com sucesso no indice %d", index);
+            if(index == -1) {
+                sprintf(resposta, "Erro ao indexar o ficheiro");
+            } else {
+                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", index);
+            }
             break;
         }
 
@@ -53,13 +56,13 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
             MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
             
             if (metaInfo != NULL) {
-                snprintf(resposta, sizeof(resposta), "Title: %s\nAuthors: %s\nYear: %d\nPath: %s",
+                sprintf(resposta, "Title: %s\nAuthors: %s\nYear: %d\nPath: %s",
                         metaInformation_get_DocumentTitle(metaInfo),
                         metaInformation_get_Author(metaInfo),
                         metaInformation_get_Year(metaInfo),
                         metaInformation_get_Path(metaInfo));
             } else {
-                snprintf(resposta, sizeof(resposta), "Document not found"); //confirmar se posso
+                sprintf(resposta, "Document not found"); //confirmar se posso
             }
             break;
         }
