@@ -113,12 +113,11 @@ int main(int argc, char *argv[]) {
         dserver_sendResponse(mensagem.fifo_client, resposta);
     }
     
-    close(fd_server);
-    
     if (nbytes == -1) {
         perror("[Server] Erro ao ler do FIFO");
     }
 
+    close(fd_server);
     unlink(fifo_clientToServer);  // Deleta o FIFO do servidor quando terminar (não chega aqui por causa do while(1))
     executer_free(executer);
     metaInformationDataset_free(dataset);

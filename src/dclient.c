@@ -54,7 +54,6 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
 
     close(fd_client); 
     unlink(fifo_serverToClient);
-
 }
 
 
@@ -89,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     dclient_sendMessage (fifo_serverToClient, &message);
     dclient_receiveMessage (fifo_serverToClient);
-    
+
     return 0;
 }
 
