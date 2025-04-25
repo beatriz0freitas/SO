@@ -75,11 +75,6 @@ int main(int argc, char *argv[]) {
     char fifo_serverToClient[256];
     snprintf(fifo_serverToClient, sizeof(fifo_serverToClient), "../fifos/serverToClient_%d", getpid());
 
-    Message message;
-    message_init(&message, &cmd, &info);
-
-    message_set_fifoClient(&message, fifo_serverToClient);  // Define o FIFO do cliente na mensagem
-
     // Cria o FIFO para resposta
     unlink(fifo_serverToClient); // Se já existir, apaga antes de criar
     if (mkfifo(fifo_serverToClient, 0666) == -1) {
@@ -87,6 +82,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    Message message;
+    message_init(&message, &cmd, &info);
     strncpy(message.fifo_client, fifo_serverToClient, sizeof(message.fifo_client) - 1);
 
     dclient_sendMessage (fifo_serverToClient, &message);
