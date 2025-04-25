@@ -3,6 +3,7 @@
 
 #include "metaInformation.h"
 #include <glib.h>
+#include <glib-2.0/glib/gtypes.h>
 
 typedef struct MetaInformationDataset MetaInformationDataset;
 MetaInformationDataset *metaInformationDataset_new();

@@ -17,7 +17,6 @@ typedef struct Message{
 } Message;
 
 void message_init(Message *msg, Command *cmd, MetaInformation *info);
-Message *message_new(Command *cmd, MetaInformation *info);
 
 void message_set_command(Message *msg, Command *cmd);
 void message_set_metaInformation(Message *msg, MetaInformation *info);
@@ -26,7 +25,5 @@ Command *message_get_command(Message *msg);
 MetaInformation *message_get_metaInformation(Message *msg);
 char *message_get_fifoClient(Message *msg);
 size_t message_get_size();
-
-void message_free(Message *msg);
 
 #endif

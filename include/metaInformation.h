@@ -15,7 +15,7 @@ typedef struct MetaInformation{
     gboolean isFree; 
 } MetaInformation;
 
-MetaInformation *metaInformation_new();
+MetaInformation metaInformation_new();
 
 int metaInformation_get_IdDocument(MetaInformation *info);
 void metaInformation_set_IdDocument(MetaInformation *info, int id);
@@ -38,8 +38,6 @@ void metaInformation_mark_as_deleted(MetaInformation *info);
 gboolean metaInformation_is_deleted(MetaInformation *info);
 
 size_t metaInformation_size();
-
-void metaInformation_free(MetaInformation *info);
 
 
 #endif

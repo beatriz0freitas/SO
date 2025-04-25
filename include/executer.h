@@ -13,5 +13,6 @@ typedef struct Executer Executer;
 
 Executer *executer_new();
 void executer_free(Executer *executer);
-char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) ;
+char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset);
+
 #endif

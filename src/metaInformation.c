@@ -5,9 +5,10 @@
 
 
 //caso altermos para char* na struct temos de fazer strdup()
-MetaInformation *metaInformation_new(){
-    MetaInformation *information = g_new0(MetaInformation, 1);
-    information->isFree = FALSE; 
+MetaInformation metaInformation_new(){
+    MetaInformation information;
+    memset(&information, 0, sizeof(MetaInformation));
+    information.isFree = FALSE; 
     return information;
 }
 
@@ -26,7 +27,6 @@ char *metaInformation_get_DocumentTitle(MetaInformation *info) {
 void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title) {
     memset(info->documentTitle, 0, sizeof(info->documentTitle));
     strncpy(info->documentTitle, title, sizeof(info->documentTitle)-1);
-    info->documentTitle[sizeof(info->documentTitle) - 1] = '\0'; // Ensure null termination
 }
 
 char *metaInformation_get_Author(MetaInformation *info) {
@@ -54,7 +54,6 @@ char *metaInformation_get_Path(MetaInformation *info) {
 void metaInformation_set_Path(MetaInformation *info, const char *path) {
     memset(info->path, 0, sizeof(info->path));
     strncpy(info->path, path, sizeof(info->path)-1);
-    info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
 char *metaInformation_get_Keywords(MetaInformation *info) {

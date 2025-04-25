@@ -23,32 +23,30 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
     char *resposta = g_new(char, 100);
 
     if (flag == CMD_INVALID) {
-        return "Comando inválido";
+        sprintf(resposta, "Comando inválido");
+        exit(1);
     }
 
     switch(flag) {
         case CMD_ADD: {
-            MetaInformation *metaInfo = metaInformation_new();
+            MetaInformation metaInfo = metaInformation_new();
             printf("%s ", command_get_arg_por_indice(command, 0));
             printf("%s ", command_get_arg_por_indice(command, 1));
             printf("%s ", command_get_arg_por_indice(command, 2));
             printf("%s ", command_get_arg_por_indice(command, 3));
 
-            metaInformation_set_DocumentTitle(metaInfo, command_get_arg_por_indice(command, 0));
-            metaInformation_set_Author(metaInfo, command_get_arg_por_indice(command, 1));
-            metaInformation_set_Year(metaInfo, atoi(command_get_arg_por_indice(command, 2)));
-            metaInformation_set_Path(metaInfo, command_get_arg_por_indice(command, 3));
+            metaInformation_set_DocumentTitle(&metaInfo, command_get_arg_por_indice(command, 0));
+            metaInformation_set_Author(&metaInfo, command_get_arg_por_indice(command, 1));
+            metaInformation_set_Year(&metaInfo, atoi(command_get_arg_por_indice(command, 2)));
+            metaInformation_set_Path(&metaInfo, command_get_arg_por_indice(command, 3));
 
-            int index = -1;
+            int index = metaInformationDataset_add(dataset, &metaInfo);
 
-            index = metaInformationDataset_add(dataset, metaInfo);
-
-            if (index == -1) {
-                metaInformation_free(metaInfo);
-                sprintf(resposta, "\nNão foi possível introduzir o ficheiro no índice");
-            }else{
-            sprintf(resposta, "\nficheiro foi indexado com sucesso no indice %d", index);
-        }
+            if(index == -1) {
+                sprintf(resposta, "Erro ao indexar o ficheiro");
+            } else {
+                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", index);
+            }
             break;
         }
 
@@ -63,7 +61,7 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
                         metaInformation_get_Year(metaInfo),
                         metaInformation_get_Path(metaInfo));
             } else {
-                strcpy(resposta, "Document not found"); //confirmar se posso
+                sprintf(resposta, "Document not found"); //confirmar se posso
             }
             break;
         }
