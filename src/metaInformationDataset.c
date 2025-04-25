@@ -81,21 +81,19 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     
     lseek(fd, posicao * metaInformation_size(), SEEK_SET);
     
-    MetaInformation *metaInfo = metaInformation_new(); // Alocar memória para receber a struct
-    if (read(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+    MetaInformation metaInfo = metaInformation_new(); // Alocar memória para receber a struct
+    if (read(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao ler do ficheiro");
-        g_free(metaInfo);
         close(fd);
         return FALSE;
     }
     
-    metaInformation_mark_as_deleted(metaInfo);
+    metaInformation_mark_as_deleted(&metaInfo);
     
     lseek(fd, posicao * metaInformation_size(), SEEK_SET);
 
-    if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+    if (write(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao escrever no ficheiro");
-        g_free(metaInfo);
         close(fd);
         return FALSE;
     }
@@ -106,7 +104,6 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao));
 
     g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
-    g_free(metaInfo);
     
         return TRUE;
     }
