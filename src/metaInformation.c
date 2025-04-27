@@ -2,18 +2,13 @@
 #include <string.h>
 #include <glib.h>
 
-struct MetaInformation{
-    int idDocument;         //TODO: temos de definir como vamos catalogar
-    char documentTitle[200];
-    char author[200];         //separados por ;
-    int year;
-    char path[64];
-    char keywords[64];      //ainda nao sei se vale a pena guardar
-};
+
 
 //caso altermos para char* na struct temos de fazer strdup()
-MetaInformation *metaInformation_new(){
-    MetaInformation *information = g_new0(MetaInformation, 1);
+MetaInformation metaInformation_new(){
+    MetaInformation information;
+    memset(&information, 0, sizeof(MetaInformation));
+    information.isFree = FALSE; 
     return information;
 }
 
@@ -32,7 +27,6 @@ char *metaInformation_get_DocumentTitle(MetaInformation *info) {
 void metaInformation_set_DocumentTitle(MetaInformation *info, const char *title) {
     memset(info->documentTitle, 0, sizeof(info->documentTitle));
     strncpy(info->documentTitle, title, sizeof(info->documentTitle)-1);
-    info->documentTitle[sizeof(info->documentTitle) - 1] = '\0'; // Ensure null termination
 }
 
 char *metaInformation_get_Author(MetaInformation *info) {
@@ -60,7 +54,6 @@ char *metaInformation_get_Path(MetaInformation *info) {
 void metaInformation_set_Path(MetaInformation *info, const char *path) {
     memset(info->path, 0, sizeof(info->path));
     strncpy(info->path, path, sizeof(info->path)-1);
-    info->path[sizeof(info->path) - 1] = '\0'; 
 }
 
 char *metaInformation_get_Keywords(MetaInformation *info) {
@@ -73,11 +66,20 @@ void metaInformation_set_Keywords(MetaInformation *info, const char *keywords) {
     info->keywords[sizeof(info->keywords) - 1] = '\0';
 }
 
-//caso altermos para char* na struct temos de fazer strdup()
-void metaInformation_free(MetaInformation *info) {
-    g_free(info);
-}
-
 size_t metaInformation_size() {
     return sizeof(struct MetaInformation);
+}
+
+void metaInformation_mark_as_deleted(MetaInformation *info){
+    info->isFree = TRUE;
+    return;
+}
+
+gboolean metaInformation_is_deleted(MetaInformation *info){
+    return info->isFree;
+}
+void metaInformation_free(MetaInformation *info) {
+    if (info) {
+        g_free(info);
+    }
 }

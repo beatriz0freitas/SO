@@ -13,10 +13,13 @@ RUN apt-get install -y \
     libgtk2.0-dev \
     git \
     pkg-config \
-    build-essential
+    build-essential \
+    libglib2.0-dev
 
 # (Optional) Set up working directory
 WORKDIR /workspaces/SO
+
+
 
 # Command to build your project
 # To run 'make' automatically, you can uncomment this (or do it manually inside the container later).

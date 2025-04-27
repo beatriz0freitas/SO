@@ -11,8 +11,7 @@
 #include "message.h"
 
 
-void dclient_sendMessage (const char* fifo_serverToClient){
-
+void dclient_sendMessage (const char* fifo_serverToClient, Message *msg) {
     // FIFO para enviar a mensagem para o servidor
     const char *fifo_clientToServer = "../fifos/clientToServer";
 
@@ -21,21 +20,27 @@ void dclient_sendMessage (const char* fifo_serverToClient){
     if (fd_server == -1) {
         perror("Erro ao abrir fifo_server para escrita");
         unlink(fifo_serverToClient);
+        exit(1);
     }
 
-    // Envia a mensagem (com o nome do FIFO de resposta)
-    char mensagem[512];
-    snprintf(mensagem, sizeof(mensagem), "%s %s", fifo_serverToClient, "Olá, servidor!");  // FIFO + mensagem
-    write(fd_server, mensagem, strlen(mensagem) + 1);
-    close(fd_server);  // Fecha o FIFO do servidor após enviar a mensagem
+    ssize_t bytesWritten = bufferedWrite(fd_server, msg, sizeof(Message));
+    if (bytesWritten != sizeof(Message)) {
+        fprintf(stderr, "[CLIENTE] Erro ao escrever a mensagem completa para o servidor\n");
+        close(fd_server);
+        unlink(fifo_serverToClient);
+        exit(1);
+    }
 
+    close(fd_server);  // Fecha o FIFO do servidor após enviar a mensagem
+    printf("[CLIENTE] Mensagem enviada para o servidor\n");
 }
 
-
-/*
-	int fd_client = open(fifo_client, O_RDONLY);
+void dclient_receiveMessage (const char* fifo_serverToClient) {
+    // Abre o FIFO do cliente para leitura da resposta do servidpor
+	int fd_client = open(fifo_serverToClient, O_RDONLY);
     if (fd_client == -1) {
-        perror("Erro ao abrir FIFO do cliente");
+        perror("Erro ao abrir FIFO do cliente para leitura");
+        unlink(fifo_serverToClient);
         exit(1);
     }
 
@@ -43,40 +48,29 @@ void dclient_sendMessage (const char* fifo_serverToClient){
     ssize_t bytesRead = bufferedRead(fd_client, buffer, sizeof(buffer)-1);
     if (bytesRead == -1) {
         perror("Erro ao ler resposta do servidor");
-        close(fd_client);
-        exit(1);
     }
 
-    //TODO: confirmar se podemos usar printf
-    buffer[bytesRead] = '\0';
-    printf("Resposta do servidor: %s\n", buffer);
+    printf("[CLIENTE] Resposta do servidor: %s\n", buffer);
 
-    close(fd_client);
-    unlink(fifo_client);
+    close(fd_client); 
+    unlink(fifo_serverToClient);
 }
-*/
+
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso inválido\n");
-        return 1;
+        exit(1);
     }
 
-    Command *cmd = command_constroi_de_linha(argc, argv);
-    if (cmd == NULL) {
-        fprintf(stderr, "Erro ao criar comando\n");
-        return 1;
+    Command cmd = command_constroi_de_linha(argc, argv);
+    if (cmd.flag == CMD_INVALID) {
+        fprintf(stderr, "Comando inválido\n");
+        exit(1);
     }
 
-    MetaInformation *info = metaInformation_new();
-    if (info == NULL) {
-        fprintf(stderr, "Erro ao criar meta informação\n");
-        command_free(cmd);
-        return 1;
-    }
-
-    Message *message = message_new(cmd, info);
-
+    MetaInformation info = metaInformation_new();
+    
     // Criação de um FIFO único para cada cliente
     char fifo_serverToClient[256];
     snprintf(fifo_serverToClient, sizeof(fifo_serverToClient), "../fifos/serverToClient_%d", getpid());
@@ -85,35 +79,15 @@ int main(int argc, char *argv[]) {
     unlink(fifo_serverToClient); // Se já existir, apaga antes de criar
     if (mkfifo(fifo_serverToClient, 0666) == -1) {
         perror("Erro ao criar FIFO do cliente");
-        return 1;
+        exit(1);
     }
 
+    Message message;
+    message_init(&message, &cmd, &info);
+    strncpy(message.fifo_client, fifo_serverToClient, sizeof(message.fifo_client) - 1);
 
-    dclient_sendMessage (fifo_serverToClient);
-
-    // Abre o FIFO do cliente para ler a resposta
-    int fd_client = open(fifo_serverToClient, O_RDONLY);
-    if (fd_client == -1) {
-        perror("Erro ao abrir fifo_cliente para leitura");
-        unlink(fifo_serverToClient);
-        return 1;
-    }
-
-    // Lê a resposta do servidor
-    char buffer[256];
-    ssize_t nbytes = read(fd_client, buffer, sizeof(buffer));
-    if (nbytes <= 0) {
-        perror("Erro ao ler resposta do FIFO");
-        close(fd_client);
-        unlink(fifo_serverToClient);
-        return 1;
-    }
-    buffer[nbytes] = '\0';
-
-    printf("Cliente recebeu: %s\n", buffer);
-
-    close(fd_client);  // Fecha o FIFO do cliente
-    unlink(fifo_serverToClient);  // Remove o FIFO do cliente
+    dclient_sendMessage (fifo_serverToClient, &message);
+    dclient_receiveMessage (fifo_serverToClient);
 
     return 0;
 }
