@@ -8,12 +8,6 @@
 
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
-struct MetaInformationDataset{
-    GHashTable *MetaInformation; // hastable em que a key é o id do documento e o value é a posição em que está guardado no ficheiro binário
-    GQueue *MetaInformationQueue; // Queue para guardar posições livres
-    int nextindex;
-};
-
 
 MetaInformationDataset *metaInformationDataset_new() {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
@@ -23,7 +17,51 @@ MetaInformationDataset *metaInformationDataset_new() {
     return dataset;
 }
 
+void metaInformationDataset_store(MetaInformationDataset *dataset) {
+    int fd = open(FILENAME, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        perror("Erro ao abrir ficheiro para escrita");
+        return;
+    }
 
+    bufferedWrite(fd, &dataset->nextindex, sizeof(int));
+
+    // Guarda o tamanho da queue
+    guint freeCount = g_queue_get_length(dataset->MetaInformationQueue);
+    bufferedWrite(fd, &freeCount, sizeof(guint));
+
+    // Guarda os elementos da queue (inteiros)
+    for (GList *l = dataset->MetaInformationQueue->head; l != NULL; l = l->next) {
+        int pos = GPOINTER_TO_INT(l->data);
+        bufferedWrite(fd, &pos, sizeof(int));
+    }
+
+    close(fd);
+}
+
+
+void metaInformationDataset_load(MetaInformationDataset *dataset) {
+    int fd = open(FILENAME, O_RDONLY);
+    if (fd < 0) {
+        perror("Ficheiro de meta-informação não encontrado, a começar vazio");
+        return;
+    }
+
+    bufferedRead(fd, &dataset->nextindex, sizeof(int));
+
+    guint freeCount;
+    bufferedRead(fd, &freeCount, sizeof(guint));
+
+    for (guint i = 0; i < freeCount; i++) {
+        int pos;
+        bufferedRead(fd, &pos, sizeof(int));
+        g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(pos));
+    }
+
+    close(fd);
+}
+
+       
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
 
