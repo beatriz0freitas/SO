@@ -78,6 +78,7 @@ void metaInformation_mark_as_deleted(MetaInformation *info){
 gboolean metaInformation_is_deleted(MetaInformation *info){
     return info->isFree;
 }
+
 void metaInformation_free(MetaInformation *info) {
     if (info) {
         g_free(info);

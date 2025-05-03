@@ -202,6 +202,62 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
     return count;
 }
 
+char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword) {
+    GString *resultado = g_string_new("[");
+    gboolean primeiro = TRUE;
+
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init(&iter, dataset->MetaInformation);
+    printf("[DEBUG] Nº de elementos no dataset: %u\n", g_hash_table_size(dataset->MetaInformation));
+
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        int id = GPOINTER_TO_INT(key);
+        MetaInformation *meta = metaInformationDataset_consult(dataset, id);
+        if (!meta) continue;
+
+        const char *path = metaInformation_get_Path(meta);
+        printf("[DEBUG] A procurar no ficheiro: %s (ID %d)\n", path, id);
+
+        FILE *fp = fopen(path, "r");
+        if (!fp) {
+            perror("Erro ao abrir ficheiro");
+            metaInformation_free(meta);
+            continue;
+        }
+
+        char *line = NULL;
+        size_t len = 0;
+        gboolean found = FALSE;
+
+        while (getline(&line, &len, fp) != -1) {
+            if (strstr(line, keyword)) {
+                found = TRUE;
+                break;
+            }
+        }
+
+        free(line);
+        fclose(fp);
+        metaInformation_free(meta);
+
+        if (found) {
+            printf("[DEBUG] Palavra '%s' encontrada no ficheiro ID %d\n", keyword, id);
+            if (!primeiro) {
+                g_string_append(resultado, ", ");
+            }
+            g_string_append_printf(resultado, "%d", id);
+            primeiro = FALSE;
+        } else {
+            printf("[DEBUG] Palavra '%s' **NÃO** encontrada no ficheiro ID %d\n", keyword, id);
+        }
+    }
+
+    g_string_append(resultado, "]");
+    return g_string_free(resultado, FALSE);
+}
+
 
 void metaInformationDataset_free(MetaInformationDataset *dataset) {
     if (dataset) {
