@@ -50,21 +50,22 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
                 snprintf(resposta, 100, "Erro: argumento NULL");
                 break;
             }
-
+        
             metaInformation_set_DocumentTitle(&metaInfo, titulo);
             metaInformation_set_Author(&metaInfo, autor);
             metaInformation_set_Year(&metaInfo, atoi(ano_str));
             metaInformation_set_Path(&metaInfo, path);
-
-            int index = metaInformationDataset_add(dataset, &metaInfo);
-
-            if(index == -1) {
+        
+            // Adiciona o documento ao dataset
+            int id = metaInformationDataset_add(dataset, &metaInfo);
+        
+            if (id == -1) {
                 sprintf(resposta, "Erro ao indexar o ficheiro");
             } else {
-                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", index);
+                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", id);
             }
-            printf("[DEBUG] ADD: ficheiro %s indexado no ID %d\n", command_get_arg_por_indice(command, 3), index);
-
+        
+            printf("[DEBUG] ADD: ficheiro %s indexado no ID %d\n", path, id);
             break;
         }
 

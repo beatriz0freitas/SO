@@ -10,6 +10,9 @@
 #include "message.h"
 #include "utils.h"
 
+#define MAX_PATH 256
+
+
 //quem quer ler - SERVIDOR - normalmente cria o fifo
 
 
@@ -34,7 +37,18 @@ void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta)
 
 
 int main(int argc, char *argv[]) {
-    printf("[DEBUG] Servidor iniciado\n");
+    char document_folder[MAX_PATH];
+
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <document_folder>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    strncpy(document_folder, argv[1], MAX_PATH);
+    document_folder[MAX_PATH - 1] = '\0';
+
+    printf("[DEBUG]: Servidor iniciado. Pasta dos documentos: %s\n", document_folder);
+    
     char *fifo_clientToServer = "../fifos/clientToServer"; // FIFO para o servidor ler as mensagens dos clientes
 
     // Cria FIFO do servidor (FIFO de leitura do cliente)
@@ -47,7 +61,15 @@ int main(int argc, char *argv[]) {
     printf("[Server] FIFO 'clientToServer' criado. A esperar por mensagens...\n");
 
     Executer *executer = executer_new();
+    
     MetaInformationDataset *dataset = metaInformationDataset_new();
+    dataset->MetaInformation = g_hash_table_new(g_direct_hash, g_direct_equal);
+    dataset->MetaInformationQueue = g_queue_new();
+    dataset->nextindex = 0;
+    
+
+    metaInformationDataset_load(dataset);
+
 
     int fd_server = open(fifo_clientToServer, O_RDONLY);
     if (fd_server == -1) {
@@ -66,7 +88,7 @@ int main(int argc, char *argv[]) {
     ssize_t nbytes;
 
     gboolean terminar = FALSE;
-    while (bufferedRead(fd_server, &mensagem, sizeof(Message)) > 0 && !terminar) {
+    while ((nbytes = bufferedRead(fd_server, &mensagem, sizeof(Message))) > 0 && !terminar) {
     
         Command *cmd = message_get_command(&mensagem);
         MetaInformation *info = message_get_metaInformation(&mensagem);
@@ -107,3 +129,5 @@ int main(int argc, char *argv[]) {
     return 0;
 
 }
+
+
