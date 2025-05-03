@@ -31,34 +31,10 @@ void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta)
     close(fd_client);
 }
 
-/*
-void *dserver_handleMessage(Message *msg, Executer *executer, MetaInformationDataset *dataset) {
-    if (!msg) {
-        fprintf(stderr, "Mensagem nula recebida.\n");
-        return NULL;
-    }
-
-    Command *cmd = message_get_command(msg);
-    MetaInformation *info = message_get_metaInformation(msg);
-
-    if (cmd == NULL || info == NULL) {
-        fprintf(stderr, "[Server] Comando ou MetaInformation inválido.\n");
-        exit(1);
-    }
-
-    char resposta[100];
-    memset(resposta, 0, sizeof(resposta));
-
-    // Executa o comando
-    char *resposta_executer = executer_execute(executer, cmd, dataset);
-    if (resposta_executer != NULL) {
-        strncpy(resposta, resposta_executer, sizeof(resposta) - 1);
-    }
-}
-*/
 
 
 int main(int argc, char *argv[]) {
+    printf("[DEBUG] Servidor iniciado\n");
     char *fifo_clientToServer = "../fifos/clientToServer"; // FIFO para o servidor ler as mensagens dos clientes
 
     // Cria FIFO do servidor (FIFO de leitura do cliente)
@@ -79,6 +55,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    //impede que o fd_server entre em EOF - manter um FIFO aberto do lado de leitura.
     int fd_serverDUMMY = open(fifo_clientToServer, O_WRONLY);
     if (fd_serverDUMMY == -1) {
         perror("Erro ao abrir FIFO do servidor para escrita");
@@ -88,21 +65,22 @@ int main(int argc, char *argv[]) {
     Message mensagem;
     ssize_t nbytes;
 
-    while (bufferedRead(fd_server, &mensagem, sizeof(Message)) > 0) {
+    gboolean terminar = FALSE;
+    while (bufferedRead(fd_server, &mensagem, sizeof(Message)) > 0 && !terminar) {
     
         Command *cmd = message_get_command(&mensagem);
         MetaInformation *info = message_get_metaInformation(&mensagem);
     
         if (cmd == NULL || info == NULL) {
             fprintf(stderr, "[Server] Comando ou MetaInformation inválido.\n");
-            exit(1);
+            continue;
         }
     
         char resposta[100];
         memset(resposta, 0, sizeof(resposta));
     
         // Executa o comando
-        char *resposta_executer = executer_execute(executer, cmd, dataset);
+        char *resposta_executer = executer_execute(executer, cmd, dataset, &terminar);
         if (resposta_executer != NULL) {
             strncpy(resposta, resposta_executer, sizeof(resposta) - 1);
             free(resposta_executer);
@@ -116,14 +94,16 @@ int main(int argc, char *argv[]) {
     if (nbytes == -1) {
         perror("[Server] Erro ao ler do FIFO");
     }
-
+  
+    printf("[Server] A encerrar...\n");
+    //SHUTDOWN SERVER
     close(fd_server);
-    unlink(fifo_clientToServer);  // Deleta o FIFO do servidor quando terminar (não chega aqui por causa do while(1))
+    close(fd_serverDUMMY);
+
+    unlink(fifo_clientToServer);
     executer_free(executer);
     metaInformationDataset_free(dataset);
-    
+
     return 0;
 
 }
-
-
