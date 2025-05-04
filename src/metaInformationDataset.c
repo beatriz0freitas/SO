@@ -89,25 +89,21 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     if (bufferedWrite(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro a escrever no ficheiro");
         close(fd);
-        _exit(1);
+        return -1;
     }
 
     close(fd);
 
-    // Atualiza hash table
     g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(id), GINT_TO_POINTER(posicao_registo));
 
     return id;
 }
 
 
+gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key) {
+    int posicao = GPOINTER_TO_INT(g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key)));
 
-gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
-
-    int posicao = -1;
-    posicao = GPOINTER_TO_INT(g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key)));
-
-    if (posicao == -1) {
+    if (posicao == 0 && !g_hash_table_contains(dataset->MetaInformation, GINT_TO_POINTER(key))) {
         return FALSE; // Não existe
     }
 
@@ -116,38 +112,35 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
         perror("Erro ao abrir ficheiro");
         return FALSE;
     }
-    
+
     lseek(fd, posicao * metaInformation_size(), SEEK_SET);
     
-    MetaInformation metaInfo = metaInformation_new(); // Alocar memória para receber a struct
-    if (read(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
+    MetaInformation metaInfo;
+    if (bufferedRead(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao ler do ficheiro");
         close(fd);
         return FALSE;
     }
-    
-    metaInformation_mark_as_deleted(&metaInfo);
-    
-    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
 
-    if (write(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
+    metaInformation_mark_as_deleted(&metaInfo);
+
+    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
+    if (bufferedWrite(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao escrever no ficheiro");
         close(fd);
         return FALSE;
     }
-    
+
     close(fd);
-    
+
     // Atualiza dataset
     g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao));
-
     g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
-    
-        return TRUE;
-    }
+
+    return TRUE;
+}
 
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-
     int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
     if (value == NULL) {
         return NULL; // Não existe
@@ -160,12 +153,10 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     }
 
     int posicao_registo = GPOINTER_TO_INT(value);
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
 
-
-    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
-    MetaInformation *metaInfo = g_malloc(metaInformation_size()); // Alocar memória para receber a struct
-
-    if (read(fd, metaInfo,  metaInformation_size()) !=  metaInformation_size()) {
+    MetaInformation *metaInfo = g_malloc(metaInformation_size());
+    if (bufferedRead(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro a ler do ficheiro");
         g_free(metaInfo);
         close(fd);
@@ -176,11 +167,12 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
     if (metaInformation_is_deleted(metaInfo)) {
         g_free(metaInfo);
-        return NULL; // O documento foi marcado como eliminado
+        return NULL;
     }
 
     return metaInfo;
 }
+
 
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword) {
     MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
