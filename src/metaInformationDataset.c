@@ -62,44 +62,44 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
 }
 
        
-
+// Atribui o ID reutilizado se disponível, senão usa o nextindex.
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
-
-    int fd = open(FILENAME, O_CREAT | O_APPEND | O_WRONLY, 0666);
+    int fd = open(FILENAME, O_CREAT | O_RDWR, 0666); // O_APPEND removido para controlo manual do offset
     if (fd == -1) {
         perror("Erro ao abrir ficheiro");
         return -1;
     }
 
-    off_t posicao_bytes = lseek(fd, 0, SEEK_END); // total de bytes do ficheiro
-    int posicao_registo;
-
+    int id, posicao_registo;
 
     if (g_queue_is_empty(dataset->MetaInformationQueue)) {
-        posicao_registo = (posicao_bytes / metaInformation_size()); // posição em que será inserido o registo
+        // Novo ID sequencial
+        id = dataset->nextindex++;
+        off_t posicao_bytes = lseek(fd, 0, SEEK_END);
+        posicao_registo = posicao_bytes / metaInformation_size(); // última posição disponível
     } else {
-        // Se a queue não estiver vazia, retiramos uma posição livre
-        posicao_registo = GPOINTER_TO_INT(g_queue_pop_head(dataset->MetaInformationQueue));
+        // Reutiliza posição e ID antigos
+        id = GPOINTER_TO_INT(g_queue_pop_head(dataset->MetaInformationQueue));
+        posicao_registo = id; // Assumimos que ID e posição no ficheiro coincidem
     }
 
-    int key = dataset->nextindex;
-    metaInformation_set_IdDocument(metaInfo, key); //atualiza o id do documento
+    metaInformation_set_IdDocument(metaInfo, id);
 
-    // Escrever a struct no ficheiro
-    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET); // Saltar para a posição certa no ficheiro
-    if (write(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
+    if (bufferedWrite(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro a escrever no ficheiro");
         close(fd);
-        return -1;
+        _exit(1);
     }
 
     close(fd);
 
-    // Inserir na hashtable: key = idDocument, value = posição (em número de structs)
-    g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(key), GINT_TO_POINTER(posicao_registo));
-    dataset->nextindex++;
-    return metaInformation_get_IdDocument(metaInfo); // dá return ao id do documento
+    // Atualiza hash table
+    g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(id), GINT_TO_POINTER(posicao_registo));
+
+    return id;
 }
+
 
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key){
