@@ -58,7 +58,6 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
 
 
 int main(int argc, char *argv[]) {
-    mkdir("fifos", 0777); // Se já existir, não faz nada
 
     if (argc < 2) {
         fprintf(stderr, "Uso inválido\n");

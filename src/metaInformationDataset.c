@@ -227,15 +227,14 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword) {
     MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
-
     if (!metaInfo || metaInformation_is_deleted(metaInfo)) {
         return -1;
     }
     
     char fullpath[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, metaInfo);
+    
     int pipefd[2];
-
     if (pipe(pipefd) == -1) {
         perror("Erro ao criar pipe");
         metaInformation_free(metaInfo);
@@ -252,14 +251,16 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
     }
 
     if (pid == 0) {  // Processo filho
-       
         close(pipefd[0]);               // Fecha leitura
         dup2(pipefd[1], STDOUT_FILENO); // Redireciona stdout para o pipe
         close(pipefd[1]);
 
-        //TODO: perigoso usar g_strdup_printf - alterar
-        const char *comando = g_strdup_printf("grep -c %s %s", keyword, fullpath); // Executar grep -c "keyword" path
-        mysystem(comando);
+        char *escaped_keyword = g_shell_quote(keyword);
+        char *escaped_path = g_shell_quote(fullpath);
+        char *comando = g_strdup_printf("grep -c %s %s", escaped_keyword, escaped_path);
+        
+        execl("/bin/sh", "sh", "-c", comando, (char *)NULL);
+
         perror("Erro ao executar grep");
         exit(1); // Se exec falhar
     }
@@ -269,16 +270,25 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
 
     char buffer[64];
     ssize_t nbytes = read(pipefd[0], buffer, sizeof(buffer) - 1);
-    if (nbytes < 0) {
-        perror("Erro ao ler do pipe");
+    if (nbytes <= 0) {
+        if (nbytes < 0)
+            perror("Erro a ler do pipe");
+        else
+            fprintf(stderr, "Aviso: Nenhum dado lido do pipe.\n");
         close(pipefd[0]);
         metaInformation_free(metaInfo);
         return -1;
     }
     buffer[nbytes] = '\0';
-
     close(pipefd[0]);
+
+    int status;
+    waitpid(pid, &status, 0);
     metaInformation_free(metaInfo);
+
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        return -1;
+    }
 
     int count = atoi(buffer); // Converte a string recebida em int
     return count;
