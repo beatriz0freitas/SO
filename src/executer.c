@@ -18,40 +18,69 @@ void executer_free(Executer *executer) {
 }
 
 //NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
-char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset) {
+char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset, gboolean *terminar_servidor) {
+    if (!executer || !command || !dataset || !terminar_servidor) {
+        char *resposta_erro = g_strdup("Erro interno: ponteiro NULL recebido.");
+        return resposta_erro;
+    }
+    
     CommandFlag flag = command_get_flag(command);
     char *resposta = g_new(char, 100);
 
     if (flag == CMD_INVALID) {
         sprintf(resposta, "Comando inválido");
-        exit(1);
+        return resposta;
     }
 
     switch(flag) {
         case CMD_ADD: {
+            if (command_get_num_args(command) < 4) {
+                snprintf(resposta, 100, "Erro: argumentos insuficientes para ADD");
+                break;
+            }
+        
             MetaInformation metaInfo = metaInformation_new();
-            printf("%s ", command_get_arg_por_indice(command, 0));
-            printf("%s ", command_get_arg_por_indice(command, 1));
-            printf("%s ", command_get_arg_por_indice(command, 2));
-            printf("%s ", command_get_arg_por_indice(command, 3));
-
-            metaInformation_set_DocumentTitle(&metaInfo, command_get_arg_por_indice(command, 0));
-            metaInformation_set_Author(&metaInfo, command_get_arg_por_indice(command, 1));
-            metaInformation_set_Year(&metaInfo, atoi(command_get_arg_por_indice(command, 2)));
-            metaInformation_set_Path(&metaInfo, command_get_arg_por_indice(command, 3));
-
-            int index = metaInformationDataset_add(dataset, &metaInfo);
-
-            if(index == -1) {
+        
+            const char *titulo = command_get_arg_por_indice(command, 0);
+            const char *autor = command_get_arg_por_indice(command, 1);
+            const char *ano_str = command_get_arg_por_indice(command, 2);
+            const char *path = command_get_arg_por_indice(command, 3);
+        
+            if (!titulo || !autor || !ano_str || !path) {
+                snprintf(resposta, 100, "Erro: argumento NULL");
+                break;
+            }
+        
+            metaInformation_set_DocumentTitle(&metaInfo, titulo);
+            metaInformation_set_Author(&metaInfo, autor);
+            metaInformation_set_Year(&metaInfo, atoi(ano_str));
+            metaInformation_set_Path(&metaInfo, path);
+        
+            // Adiciona o documento ao dataset
+            int id = metaInformationDataset_add(dataset, &metaInfo);
+        
+            if (id == -1) {
                 sprintf(resposta, "Erro ao indexar o ficheiro");
             } else {
-                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", index);
+                sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", id);
             }
+        
+            printf("[DEBUG] ADD: ficheiro %s indexado no ID %d\n", path, id);
             break;
         }
 
         case CMD_CONSULT: {
-            int id = atoi(command_get_arg_por_indice(command, 0));
+            if (command_get_num_args(command) < 1) {
+                snprintf(resposta, 100, "Erro: ID não fornecido");
+                break;
+            }
+
+            const char *id_str = command_get_arg_por_indice(command, 0);
+            if (!id_str) {
+                strcpy(resposta, "Erro: ID inválido.");
+                break;
+            }
+            int id = atoi(id_str);
             MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
             
             if (metaInfo != NULL) {
@@ -64,10 +93,21 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
                 sprintf(resposta, "Document not found"); //confirmar se posso
             }
             break;
+            
         }
 
         case CMD_DELETE: {
-            int id = atoi(command_get_arg_por_indice(command, 0));
+            if (command_get_num_args(command) < 1) {
+                snprintf(resposta, 100, "Erro: ID não fornecido");
+                break;
+            }
+
+            const char *id_str = command_get_arg_por_indice(command, 0);
+            if (!id_str) {
+                strcpy(resposta, "Erro: ID inválido.");
+                break;
+            }
+            int id = atoi(id_str);
             if (metaInformationDataset_remove(dataset, id)) {
                 sprintf(resposta, "Index entry %d deleted", id);
             } else {
@@ -77,8 +117,24 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         }
 
         case CMD_LIST: {
-            int id = atoi(command_get_arg_por_indice(command, 0));
+            if (command_get_num_args(command) < 2) {
+                snprintf(resposta, 100, "Erro: numero de linhas ou keyword não fornecida");
+                break;
+            }
+
+            const char *id_str = command_get_arg_por_indice(command, 0);
+            if (!id_str) {
+                strcpy(resposta, "Erro: ID inválido.");
+                break;
+            }
+
+            int id = atoi(id_str);
             char *keyword = command_get_arg_por_indice(command, 1);
+            if (!keyword) {
+                strcpy(resposta, "Erro: keyword inválida.");
+                break;
+            }
+
             int count = metaInformationDataset_count_keyword_lines(dataset, id, keyword);
             if (count != -1) {
                 sprintf(resposta, "Keyword '%s' found %d times in document with ID %d", keyword, count, id);
@@ -89,8 +145,24 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         }
 
         case CMD_SEARCH: {
+            if (command_get_num_args(command) < 1) {
+                snprintf(resposta, 100, "Erro: keyword não fornecida");
+                break;
+            }
             char *keyword = command_get_arg_por_indice(command, 0);
-            //TODO
+            if (!keyword) {
+                strcpy(resposta, "Erro: keyword inválida.");
+                break;
+            }
+            
+            char *result = metaInformationDataset_search_documents(dataset, keyword);
+            if (result != NULL) {
+                sprintf(resposta, "%s", result);
+                g_free(result);
+            } else {
+                strcpy(resposta, "[]");
+            }
+            
             break;
         }
 
@@ -102,12 +174,10 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         }
 
         case CMD_SHUTDOWN: {
-            //TODO: fechar todos os pipes, mensagem para o filho fechar
+            *terminar_servidor = TRUE;
+            strcpy(resposta, "Servidor encerrado com sucesso.");
             break;
         }
-
-        default:
-            return "Comando inválido";
     }
     executer->num_executions++;
     return resposta;

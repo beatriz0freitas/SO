@@ -13,7 +13,7 @@
 
 void dclient_sendMessage (const char* fifo_serverToClient, Message *msg) {
     // FIFO para enviar a mensagem para o servidor
-    const char *fifo_clientToServer = "../fifos/clientToServer";
+    const char *fifo_clientToServer = "fifos/clientToServer";
 
     // Abre o FIFO do servidor para escrita
     int fd_server = open(fifo_clientToServer, O_WRONLY);
@@ -44,7 +44,7 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
         exit(1);
     }
 
-    char buffer[256];
+    char buffer[512];
     ssize_t bytesRead = bufferedRead(fd_client, buffer, sizeof(buffer)-1);
     if (bytesRead == -1) {
         perror("Erro ao ler resposta do servidor");
@@ -58,6 +58,7 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
 
 
 int main(int argc, char *argv[]) {
+
     if (argc < 2) {
         fprintf(stderr, "Uso inválido\n");
         exit(1);
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]) {
     
     // Criação de um FIFO único para cada cliente
     char fifo_serverToClient[256];
-    snprintf(fifo_serverToClient, sizeof(fifo_serverToClient), "../fifos/serverToClient_%d", getpid());
+    snprintf(fifo_serverToClient, sizeof(fifo_serverToClient), "fifos/serverToClient_%d", getpid());
 
     // Cria o FIFO para resposta
     unlink(fifo_serverToClient); // Se já existir, apaga antes de criar

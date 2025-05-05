@@ -38,6 +38,7 @@ void metaInformation_mark_as_deleted(MetaInformation *info);
 gboolean metaInformation_is_deleted(MetaInformation *info);
 
 size_t metaInformation_size();
+void metaInformation_free(MetaInformation *info);
 
 
 #endif
