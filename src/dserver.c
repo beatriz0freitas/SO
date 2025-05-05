@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
     Executer *executer = executer_new();
     MetaInformationDataset *dataset = metaInformationDataset_new(document_folder);
 
-
     //metaInformationDataset_load(dataset);
 
     // Abre FIFO para leitura

@@ -44,7 +44,7 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
         exit(1);
     }
 
-    char buffer[256];
+    char buffer[512];
     ssize_t bytesRead = bufferedRead(fd_client, buffer, sizeof(buffer)-1);
     if (bytesRead == -1) {
         perror("Erro ao ler resposta do servidor");

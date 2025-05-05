@@ -298,7 +298,7 @@ char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, c
 
         char fullpath[MAX_PATH];
         metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
-        printf("[DEBUG]: A procurar em: %s\n", fullpath);
+        //printf("[DEBUG]: A procurar em: %s\n", fullpath);
 
         // cria pipe
         int pipefd[2];
