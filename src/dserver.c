@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     printf("[DEBUG]: Servidor iniciado. Pasta dos documentos: %s\n", document_folder);
 
     // FIFO do servidor
-    const char *fifo_clientToServer = "../fifos/clientToServer";
+    const char *fifo_clientToServer = "fifos/clientToServer";
     unlink(fifo_clientToServer);
     if (mkfifo(fifo_clientToServer, 0666) == -1 && errno != EEXIST) {
         perror("Erro ao criar fifo_clientToServer");
@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
     // Inicializa estruturas
     Executer *executer = executer_new();
     MetaInformationDataset *dataset = metaInformationDataset_new(document_folder);
+
 
     //metaInformationDataset_load(dataset);
 
