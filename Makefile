@@ -12,7 +12,9 @@ dclient: bin/dclient
 folders:
 	@mkdir -p src include obj bin tmp
 
-
+indexar: 
+	./bin/addGdatasetMetadata.sh Ccatalog.tsv
+	
 bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
 	$(CC) $^ $(LDFLAGS) -o $@
 

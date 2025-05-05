@@ -5,15 +5,18 @@
 #include <glib.h>
 #include <glib-2.0/glib/gtypes.h>
 
+#define MAX_PATH 256
 
 typedef struct MetaInformationDataset{
     GHashTable *MetaInformation; // hastable em que a key é o id do documento e o value é a posição em que está guardado no ficheiro binário
     GQueue *MetaInformationQueue; // Queue para guardar posições livres
     int nextindex;
+    char folder[MAX_PATH];        // caminho da pasta de documentos
+    char filename[MAX_PATH];
 } MetaInformationDataset;
 
 
-MetaInformationDataset *metaInformationDataset_new();
+MetaInformationDataset *metaInformationDataset_new(const char *document_folder);
 void metaInformationDataset_store(MetaInformationDataset *dataset);
 void metaInformationDataset_load(MetaInformationDataset *dataset);
 
@@ -22,5 +25,6 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key);
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword);
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword);
-void metaInformationDataset_free(MetaInformationDataset *dataset) ;
+void metaInformationDataset_free(MetaInformationDataset *dataset);
+
 #endif

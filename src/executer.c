@@ -157,8 +157,8 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
             
             char *result = metaInformationDataset_search_documents(dataset, keyword);
             if (result != NULL) {
-                sprintf(resposta, "%s", result);
                 g_free(result);
+                sprintf(resposta, "%s", result);
             } else {
                 strcpy(resposta, "[]");
             }
