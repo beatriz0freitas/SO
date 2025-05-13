@@ -8,7 +8,6 @@
 #define MAX_PATH 256
 
 typedef struct MetaInformationDataset{
-    GHashTable *MetaInformation; // hastable em que a key é o id do documento e o value é a posição em que está guardado no ficheiro binário
     GQueue *MetaInformationQueue; // Queue para guardar posições livres
     int nextindex;
     char folder[MAX_PATH];        // caminho da pasta de documentos
