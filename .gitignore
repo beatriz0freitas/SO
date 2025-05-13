@@ -1,4 +1,10 @@
 .vscode/c_cpp_properties.json
 
+*.pid
+
+*.bin
+
+documentos/
+bin/
 **/data/
 *.o

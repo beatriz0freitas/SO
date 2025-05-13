@@ -2,6 +2,12 @@
     "files.associations": {
         "metaInformation.h": "c",
         "metaInformationDataset.h": "c",
-        "executer.h": "c"
+        "executer.h": "c",
+        "system_error": "c",
+        "array": "c",
+        "functional": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
     }
 }

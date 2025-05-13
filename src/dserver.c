@@ -28,6 +28,16 @@ void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta)
 
 
 int main(int argc, char *argv[]) {
+
+    //mensagem de debug
+    char cwd_buffer[MAX_PATH];
+    if (getcwd(cwd_buffer, sizeof(cwd_buffer)) != NULL) {
+        printf("[DEBUG]: Servidor a correr no diretório: %s\n", cwd_buffer);
+    } else {
+        perror("[DEBUG]: Erro ao obter o diretório atual (getcwd)");
+    }
+
+
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <document_folder>\n", argv[0]);
         return 1;
