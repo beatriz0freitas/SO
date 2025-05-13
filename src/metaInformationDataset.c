@@ -346,6 +346,98 @@ char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, c
     return g_string_free(resultado, FALSE);
 }
 
+char *metaInformationDataset_search_documents_sequential(MetaInformationDataset *dataset, const char *keyword) {
+    return metaInformationDataset_search_documents_parallel(dataset, keyword, 1);
+}
+
+char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *dataset, const char *keyword, int max_procs) {
+    GString *resultado = g_string_new("[");
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, dataset->MetaInformation);
+
+    GArray *matching_ids = g_array_new(FALSE, FALSE, sizeof(int));
+    int active_children = 0;
+
+    // Para guardar pids e respetivos doc_ids
+    typedef struct {
+        pid_t pid;
+        int doc_id;
+    } ChildInfo;
+
+    GArray *children = g_array_new(FALSE, FALSE, sizeof(ChildInfo));
+
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        if (value == NULL) continue;
+
+        MetaInformation *meta = (MetaInformation *)value;
+        int doc_id = GPOINTER_TO_INT(key);
+
+        char fullpath[MAX_PATH];
+        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            // Filho: apenas executa grep
+            execlp("grep", "grep", "-q", keyword, fullpath, (char*)NULL);
+            _exit(1); // grep não encontrou ou erro
+        } else if (pid > 0) {
+            ChildInfo info = {pid, doc_id};
+            g_array_append_val(children, info);
+            active_children++;
+        }
+
+        // Se atingimos o limite, espera por algum
+        if (active_children >= max_procs) {
+            int status;
+            pid_t ended = wait(&status);
+            active_children--;
+
+            // Verifica se o grep encontrou a keyword
+            for (guint i = 0; i < children->len; i++) {
+                ChildInfo info = g_array_index(children, ChildInfo, i);
+                if (info.pid == ended) {
+                    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                        g_array_append_val(matching_ids, info.doc_id);
+                    }
+                    // Remove este elemento da lista
+                    g_array_remove_index(children, i);
+                    break;  // Só pode haver um com este pid
+                }
+            }
+            
+        }
+    }
+
+    // Espera por os restantes filhos
+    while (active_children > 0) {
+        int status;
+        pid_t ended = wait(&status);
+        active_children--;
+
+        for (guint i = 0; i < children->len; i++) {
+            ChildInfo info = g_array_index(children, ChildInfo, i);
+            if (info.pid == ended && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                g_array_append_val(matching_ids, info.doc_id);
+                break;
+            }
+        }
+    }
+
+    // Constrói o resultado
+    for (guint i = 0; i < matching_ids->len; i++) {
+        if (i > 0) g_string_append(resultado, ", ");
+        g_string_append_printf(resultado, "%d", g_array_index(matching_ids, int, i));
+    }
+
+    g_array_free(matching_ids, TRUE);
+    g_array_free(children, TRUE);
+    g_string_append(resultado, "]");
+    return g_string_free(resultado, FALSE);
+}
+
+
+
 void metaInformationDataset_free(MetaInformationDataset *dataset) {
     if (dataset) {
         if (dataset->MetaInformation) {

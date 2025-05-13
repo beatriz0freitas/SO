@@ -2,7 +2,7 @@
 
 set -euo pipefail
 # Script to add document metadata from the Gcatalog file using dclient.
-# Usage: ./addGdatasetMetadata.sh.sh <Gcatalog_file>
+# Usage: ./addGdatasetMetadata.sh <Gcatalog_file>
 
 # Check if exactly one argument (the input file) is provided
 if [ "$#" -ne 1 ]; then
