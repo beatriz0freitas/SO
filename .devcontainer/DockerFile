@@ -1,26 +1,17 @@
-# Use Ubuntu 22.04 as the base image
 FROM ubuntu:22.04
 
-# Make sure everything is up-to-date
-RUN apt-get update && apt-get upgrade -y
-
-# Install the necessary build tools and dependencies
-RUN apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
     gcc \
     gdb \
     make \
     libglib2.0-dev \
-    libgtk2.0-dev \
+    bats \
     git \
     pkg-config \
-    build-essential \
-    libglib2.0-dev
+    build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# (Optional) Set up working directory
 WORKDIR /workspaces/SO
 
-
-
-# Command to build your project
-# To run 'make' automatically, you can uncomment this (or do it manually inside the container later).
-# RUN make
