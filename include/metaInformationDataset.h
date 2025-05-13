@@ -6,6 +6,7 @@
 #include <glib-2.0/glib/gtypes.h>
 
 #define MAX_PATH 256
+#define CODIGOJAINDEXADO 20000
 
 typedef struct MetaInformationDataset{
     GQueue *MetaInformationQueue; // Queue para guardar posições livres

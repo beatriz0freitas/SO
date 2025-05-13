@@ -246,3 +246,65 @@ trap teardown_file EXIT
     assert_failure
     assert_output --partial "Comando inválido"
 }
+
+# --- Testes de Pesquisa com processos ---
+
+@test "21. Search with 1 process (keyword: 'apple')" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "apple" 1
+    assert_success
+    assert_output --regexp "\[$DOC1_ID\]"
+}
+
+@test "22. Search with 3 processes (keyword: 'apple')" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "apple" 3
+    assert_success
+    assert_output --regexp "\[$DOC1_ID\]"
+}
+
+@test "23. Search with 5 processes (keyword: 'banana')" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "banana" 5
+    assert_success
+    assert_output --regexp "\[$DOC2_ID\]"
+}
+
+@test "24. Search with 5 processes (keyword: 'document')" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "document" 5
+    assert_success
+    assert_output --regexp "\[.*$DOC1_ID.*$DOC2_ID.*$DOC3_ID.*\]"
+}
+
+@test "25. Search with 10 processes (keyword: 'nonexistentkeyword')" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "nonexistentkeyword" 10
+    assert_success
+    assert_output --exact "[]"
+}
+
+@test "26. Search with invalid process count (zero)" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "apple" 0
+    assert_failure
+    assert_output --partial "Número de processos inválido"
+}
+
+@test "27. Search with invalid process count (negative)" {
+    skip "Temporarily disabled"
+    run "$CLIENT_EXEC" -s "apple" -3
+    assert_failure
+    assert_output --partial "Número de processos inválido"
+}
+
+# --- Teste de indexação única ---
+
+@test "28. Prevent duplicate indexing of same document (doc2_bats.txt)" {
+    # Segunda indexação com o mesmo ficheiro
+    run "$CLIENT_EXEC" -a "Bats Title Duplicate" "Author Dup" "2024" "doc2_bats.txt"
+    assert_success
+    assert_output --partial "Ficheiro já indexado"
+}
+
+

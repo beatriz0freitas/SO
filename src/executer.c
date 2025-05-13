@@ -61,7 +61,9 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         
             if (id == -1) {
                 sprintf(resposta, "Erro ao indexar o ficheiro");
-            } else {
+            } else if (id < -1){
+                sprintf(resposta, "Ficheiro já indexado no indice %d", id + CODIGOJAINDEXADO);
+            }else {
                 sprintf(resposta, "Ficheiro indexado com sucesso no indice %d", id);
             }
         

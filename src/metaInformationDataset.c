@@ -10,6 +10,7 @@
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 
+
 MetaInformationDataset *metaInformationDataset_new(const char *document_folder) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformationQueue = g_queue_new();
@@ -105,6 +106,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     char caminhoCompleto[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(caminhoCompleto, sizeof(caminhoCompleto), dataset, metaInfo);
 
+
     int doc_fd = open(caminhoCompleto, O_RDONLY);
     if (doc_fd == -1) {
         perror("[DEBUG] Ficheiro do documento não encontrado");
@@ -112,6 +114,30 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
         return -1;
     }
     close(doc_fd);
+
+    //  Verificar duplicação: percorre metainformações já existentes 
+    //NOTA: isto é muito pouco eficiente, rever se há melhor maneira de verificar
+        MetaInformation existente;
+        int pos = 0;
+        while (bufferedRead(fd, &existente, metaInformation_size()) == metaInformation_size()) {
+            if (metaInformation_is_deleted(&existente)) {
+                pos++;
+                continue;
+            }
+    
+            char caminhoCompletoExistente[MAX_PATH];
+            metaInformationDataset_buildfull_documentpath(caminhoCompletoExistente, sizeof(caminhoCompletoExistente), dataset, &existente);
+    
+            if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
+                fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
+                close(fd);
+                return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
+            }
+    
+            pos++;
+        }
+
+    //
 
     int id;
 
