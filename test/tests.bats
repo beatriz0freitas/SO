@@ -181,7 +181,7 @@ trap teardown_file EXIT
     assert_output --regexp "\[.*\]"
 }
 
-@test "11. Search for documents containing 'document'" {
+@test "12. Search for documents containing 'document'" {
     run "$CLIENT_EXEC" -s "document"
     assert_success
     assert_output --partial "$DOC1_ID"
@@ -190,26 +190,26 @@ trap teardown_file EXIT
     assert_output --regexp "\[.*\]"
 }
 
-@test "12. Search for documents containing 'nonexistentkeywordxyz'" {
+@test "13. Search for documents containing 'nonexistentkeywordxyz'" {
     run "$CLIENT_EXEC" -s "nonexistentkeywordxyz"
     assert_success
     assert_output --partial "[]"
 }
 
 # --- Testes de Remoção ---
-@test "13. Remove Document 1 (ID: $DOC1_ID)" {
+@test "14. Remove Document 1 (ID: $DOC1_ID)" {
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --regexp "Index entry $DOC1_ID deleted|deleted"
 }
 
-@test "14. Consult Document 1 (ID: $DOC1_ID) after removal" {
+@test "15. Consult Document 1 (ID: $DOC1_ID) after removal" {
     run "$CLIENT_EXEC" -c "$DOC1_ID"
     assert_success
     assert_output --partial "Document not found"
 }
 
-@test "15. Search for 'apple' after Document 1 removal" {
+@test "16. Search for 'apple' after Document 1 removal" {
     run "$CLIENT_EXEC" -s "apple"
     assert_success
     if ! echo "$output" | grep -q "\[\]"; then
@@ -219,32 +219,29 @@ trap teardown_file EXIT
     fi
 }
 
-@test "16. Attempt to remove already removed/non-existent Document 1" {
+@test "17. Attempt to remove already removed/non-existent Document 1" {
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --partial "Entry not found"
 }
 
 # --- Teste de Novo Documento ---
-@test "17. Index a new document 'doc4_bats.txt' after removal" {
-    skip "Temporarily disabled"
+@test "18. Index a new document 'doc4_bats.txt' after removal" {
     create_test_document "doc4_bats.txt" \
         "Fourth bats document, post removal."
     run "$CLIENT_EXEC" -a "Bats Fourth Dimension" "Author E-Bats" "2026" "doc4_bats.txt"
     assert_success
-    assert_output --regexp "indexado com sucesso no indice|indexed"
+    assert_output --regexp "indexado com sucesso no indice 1|indexed"
 }
 
 # --- Testes de Erro ---
-@test "18. Invalid command - too few arguments for -a" {
-    skip "Temporarily disabled"
+@test "19. Invalid command - too few arguments for -a" {
     run "$CLIENT_EXEC" -a "JustBatsTitle"
     assert_success
     assert_output --partial "Erro: argumentos insuficientes para ADD"
 }
 
-@test "19. Invalid command - wrong flag '-x'" {
-    skip "Temporarily disabled"
+@test "20. Invalid command - wrong flag '-x'" {
     run "$CLIENT_EXEC" -x "somevalue"
     assert_failure
     assert_output --partial "Comando inválido"
