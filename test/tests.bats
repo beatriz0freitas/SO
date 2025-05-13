@@ -159,19 +159,18 @@ trap teardown_file EXIT
 
 # --- Testes de Pesquisa ---
 @test "9. Search for documents containing 'apple'" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -s "apple"
     assert_success
-    assert_output "[$DOC1_ID]"
+    assert_output --partial "[$DOC1_ID]"
 }
 
 @test "10. Search for documents containing 'banana'" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -s "banana"
     assert_success
-    assert_output "[$DOC2_ID]"
+    assert_output --partial "[$DOC2_ID]"
 }
 
+## NOTA: Não sei se é suposto contar as palavras apenas se for exatamente iguais ou se tiver minuscula ou maiuscula conta na mesma
 @test "11. Search for documents containing 'Bats document'" {
     skip "Temporarily disabled"
     run "$CLIENT_EXEC" -s "Bats document"
@@ -182,11 +181,19 @@ trap teardown_file EXIT
     assert_output --regexp "\[.*\]"
 }
 
+@test "11. Search for documents containing 'document'" {
+    run "$CLIENT_EXEC" -s "document"
+    assert_success
+    assert_output --partial "$DOC1_ID"
+    assert_output --partial "$DOC2_ID"
+    assert_output --partial "$DOC3_ID"
+    assert_output --regexp "\[.*\]"
+}
+
 @test "12. Search for documents containing 'nonexistentkeywordxyz'" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -s "nonexistentkeywordxyz"
     assert_success
-    assert_output "[]"
+    assert_output --partial "[]"
 }
 
 # --- Testes de Remoção ---

@@ -297,26 +297,35 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
 
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword) {
 
-    /*
+    int fd = open(dataset->filename, O_RDONLY);
+    if (fd == -1) {
+        perror("[ERRO] Não foi possível abrir o ficheiro de metainformação");
+        return g_strdup("[]");
+    }
+    
     GString *resultado = g_string_new("[");
 
-    GHashTableIter iter;
-    gpointer key, value;
-    g_hash_table_iter_init(&iter, dataset->MetaInformation);
+    int id = 0;
+    MetaInformation meta;
 
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        if(value == NULL) continue;
-
-        MetaInformation *meta = (MetaInformation *)value;
+    // Lê registos de metainformação até não haver mais dados
+    while (bufferedRead(fd, &meta, metaInformation_size()) == metaInformation_size()) {
+        if (metaInformation_is_deleted(&meta)) {
+                id++;
+                continue;
+        }
 
         char fullpath[MAX_PATH];
-        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
+        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, &meta);
         //printf("[DEBUG]: A procurar em: %s\n", fullpath);
 
         // cria pipe
         int pipefd[2];
-        if (pipe(pipefd) < 0) 
+        if (pipe(pipefd) < 0) {
+            id++;
             continue;
+        }
+           
 
         pid_t pid = fork();
         if (pid == 0) {
@@ -341,15 +350,14 @@ char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, c
             // grep -l escreve "fullpath\n", então basta saber que encontrou
             if (resultado->len > 1)  // testa se já há algum elemento
                 g_string_append(resultado, ", ");
-            g_string_append_printf(resultado, "%d", GPOINTER_TO_INT(key));
+            g_string_append_printf(resultado, "%d", meta.idDocument);
         }
-    }
 
+        id++;
+    }
     g_string_append(resultado, "]");
     return g_string_free(resultado, FALSE);
 
-    */
-    return NULL;
 }
 
 char *metaInformationDataset_search_documents_sequential(MetaInformationDataset *dataset, const char *keyword) {
