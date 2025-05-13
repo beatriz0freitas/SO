@@ -65,7 +65,7 @@ setup_file() {
 
     create_test_document "doc2_bats.txt" \
         "This is bats document two. banana keyword." \
-        "Another line for banana here."
+        "Another line for banana here. banana"
 
     create_test_document "doc3_bats.txt" \
         "Bats document three is for testing."
@@ -132,7 +132,6 @@ trap teardown_file EXIT
 }
 
 @test "5. Consult Document 2 (ID: $DOC2_ID)" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -c "$DOC2_ID"
     assert_success
     assert_output --partial "Bats Story 2"
@@ -141,21 +140,18 @@ trap teardown_file EXIT
 
 # --- Testes de Contagem ---
 @test "6. Count lines with 'apple' in Document 1 (ID: $DOC1_ID)" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -l "$DOC1_ID" "apple"
     assert_success
     assert_output --regexp "Keyword 'apple' found 2 time(s)?"
 }
 
 @test "7. Count lines with 'banana' in Document 2 (ID: $DOC2_ID)" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -l "$DOC2_ID" "banana"
     assert_success
     assert_output --regexp "Keyword 'banana' found 2 time(s)?"
 }
 
 @test "8. Count lines with 'nonexistentkeyword' in Document 1 (ID: $DOC1_ID)" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -l "$DOC1_ID" "nonexistentkeyword"
     assert_success
     assert_output --regexp "Keyword 'nonexistentkeyword' found 0 time(s)?"

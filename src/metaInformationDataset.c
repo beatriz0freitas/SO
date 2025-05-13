@@ -225,12 +225,12 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
 
 
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword) {
-    /*
+
     MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
     if (!metaInfo || metaInformation_is_deleted(metaInfo)) {
         return -1;
     }
-    
+
     char fullpath[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, metaInfo);
     
@@ -286,16 +286,13 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
     waitpid(pid, &status, 0);
     metaInformation_free(metaInfo);
 
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    if (!WIFEXITED(status) || (WEXITSTATUS(status) != 0 && WEXITSTATUS(status) != 1)) { //aceita 0 (encontrou com sucesso) ou 1 (se não encontrou nenhuma palavra igual mas leu o ficheiro)
         return -1;
     }
 
     int count = atoi(buffer); // Converte a string recebida em int
     return count;
 
-    */
-
-    return 0;
 }
 
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword) {
