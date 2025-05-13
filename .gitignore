@@ -2,6 +2,9 @@
 
 *.pid
 
+*.bin
+
+documentos/
 bin/
 **/data/
 *.o
