@@ -394,7 +394,6 @@ char *metaInformationDataset_search_documents_sequential(MetaInformationDataset 
 
 char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *dataset, const char *keyword, int max_procs) {
 
-    /*
     GString *resultado = g_string_new("[");
     GHashTableIter iter;
     gpointer key, value;
@@ -479,8 +478,7 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
     g_string_append(resultado, "]");
     return g_string_free(resultado, FALSE);
 
-    */
-   return NULL;
+
 }
 
 
