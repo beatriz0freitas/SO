@@ -181,7 +181,7 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     close(fd);
 
     // Atualiza dataset (adiciona o id á stack de ids de metainformação apagados, para ser utilizada posteriormente)
-    g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao));
+    g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao_registo));
 
     //TODO: remove da cache se tiver
 
