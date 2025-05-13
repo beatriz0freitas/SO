@@ -166,7 +166,9 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
         return FALSE;
     }
 
-    //Talvez confirmar primeiro se não está já apagado, senão vai adicionar um indice a mais á stack
+    if (metaInformation_is_deleted(&metaInfo)){
+        return FALSE;
+    }
 
     //marca como apagado (tecnica das tombstones)
     metaInformation_mark_as_deleted(&metaInfo); 

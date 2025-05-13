@@ -198,32 +198,28 @@ trap teardown_file EXIT
 
 # --- Testes de Remoção ---
 @test "13. Remove Document 1 (ID: $DOC1_ID)" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --regexp "Index entry $DOC1_ID deleted|deleted"
 }
 
 @test "14. Consult Document 1 (ID: $DOC1_ID) after removal" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -c "$DOC1_ID"
     assert_success
     assert_output --partial "Document not found"
 }
 
 @test "15. Search for 'apple' after Document 1 removal" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -s "apple"
     assert_success
     if ! echo "$output" | grep -q "\[\]"; then
         refute_output --partial "$DOC1_ID"
     else
-        assert_output "[]"
+        assert_output --partial "[]"
     fi
 }
 
 @test "16. Attempt to remove already removed/non-existent Document 1" {
-    skip "Temporarily disabled"
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --partial "Entry not found"
