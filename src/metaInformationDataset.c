@@ -192,36 +192,14 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 }
 
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-    int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
-    if (value == NULL) {
-        return NULL; // Não existe
-    }
-
-    int fd = open(dataset->filename, O_RDONLY);
-    if (fd == -1) {
-        perror("Erro ao abrir ficheiro");
+    MetaInformation *original = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
+    if (original == NULL || metaInformation_is_deleted(original)) {
         return NULL;
     }
 
-    int posicao_registo = GPOINTER_TO_INT(value);
-    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
-
-    MetaInformation *metaInfo = g_malloc(metaInformation_size());
-    if (bufferedRead(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
-        perror("Erro a ler do ficheiro");
-        g_free(metaInfo);
-        close(fd);
-        return NULL;
-    }
-
-    close(fd);
-
-    if (metaInformation_is_deleted(metaInfo)) {
-        g_free(metaInfo);
-        return NULL;
-    }
-
-    return metaInfo;
+    MetaInformation *copy = g_new(MetaInformation, 1);
+    memcpy(copy, original, sizeof(MetaInformation));
+    return copy;
 }
 
 
