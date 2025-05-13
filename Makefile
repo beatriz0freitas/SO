@@ -62,3 +62,4 @@ clean:
 	rm -f obj/*.o tmp/*
 	rm -f bin/dserver bin/dclient
 
+.PHONY: test
