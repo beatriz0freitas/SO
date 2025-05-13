@@ -42,7 +42,7 @@ test/test_libs:
 	@git clone https://github.com/bats-core/bats-support test/test_libs/bats-support
 	@git clone https://github.com/bats-core/bats-assert test/test_libs/bats-assert
 
-test: test/test_libs
+test: cleanAll test/test_libs
 	@echo "[INFO] Running Bats tests in test/tests.bats..."
 	@if command -v bats >/dev/null 2>&1; then \
 		if [ -f test/tests.bats ]; then \
@@ -61,5 +61,9 @@ test: test/test_libs
 clean:
 	rm -f obj/*.o tmp/*
 	rm -f bin/dserver bin/dclient
+
+cleanAll: clean
+	rm -f information.bin
+
 
 .PHONY: test

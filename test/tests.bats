@@ -196,20 +196,64 @@ trap teardown_file EXIT
     assert_output --partial "[]"
 }
 
+# --- Testes de Pesquisa com processos ---
+
+@test "14. Search with 1 process (keyword: 'apple')" {
+    run "$CLIENT_EXEC" -s "apple" 1
+    assert_success
+    assert_output --regexp "[$DOC1_ID]"
+}
+
+@test "15. Search with 3 processes (keyword: 'apple')" {
+    run "$CLIENT_EXEC" -s "apple" 3
+    assert_success
+    assert_output --regexp "[$DOC1_ID]"
+}
+
+@test "16. Search with 5 processes (keyword: 'banana')" {
+    run "$CLIENT_EXEC" -s "banana" 5
+    assert_success
+    assert_output --regexp "[$DOC2_ID]"
+}
+
+@test "17. Search with 5 processes (keyword: 'document')" {
+    run "$CLIENT_EXEC" -s "document" 5
+    assert_success
+    assert_output --regexp "\[.*$DOC1_ID.*$DOC2_ID.*$DOC3_ID.*\]"
+}
+
+@test "18. Search with 10 processes (keyword: 'nonexistentkeyword')" {
+    run "$CLIENT_EXEC" -s "nonexistentkeyword" 10
+    assert_success
+    assert_output --partial "[]"
+}
+
+@test "19. Search with invalid process count (zero)" {
+    run "$CLIENT_EXEC" -s "apple" 0
+    assert_success
+    assert_output --partial "Número de processos inválido"
+}
+
+@test "20. Search with invalid process count (negative)" {
+    run "$CLIENT_EXEC" -s "apple" -3
+    assert_success
+    assert_output --partial "Número de processos inválido"
+}
+
 # --- Testes de Remoção ---
-@test "14. Remove Document 1 (ID: $DOC1_ID)" {
+@test "21. Remove Document 1 (ID: $DOC1_ID)" {
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --regexp "Index entry $DOC1_ID deleted|deleted"
 }
 
-@test "15. Consult Document 1 (ID: $DOC1_ID) after removal" {
+@test "22. Consult Document 1 (ID: $DOC1_ID) after removal" {
     run "$CLIENT_EXEC" -c "$DOC1_ID"
     assert_success
     assert_output --partial "Document not found"
 }
 
-@test "16. Search for 'apple' after Document 1 removal" {
+@test "23. Search for 'apple' after Document 1 removal" {
     run "$CLIENT_EXEC" -s "apple"
     assert_success
     if ! echo "$output" | grep -q "\[\]"; then
@@ -219,14 +263,14 @@ trap teardown_file EXIT
     fi
 }
 
-@test "17. Attempt to remove already removed/non-existent Document 1" {
+@test "24. Attempt to remove already removed/non-existent Document 1" {
     run "$CLIENT_EXEC" -d "$DOC1_ID"
     assert_success
     assert_output --partial "Entry not found"
 }
 
 # --- Teste de Novo Documento ---
-@test "18. Index a new document 'doc4_bats.txt' after removal" {
+@test "25. Index a new document 'doc4_bats.txt' after removal" {
     create_test_document "doc4_bats.txt" \
         "Fourth bats document, post removal."
     run "$CLIENT_EXEC" -a "Bats Fourth Dimension" "Author E-Bats" "2026" "doc4_bats.txt"
@@ -235,14 +279,25 @@ trap teardown_file EXIT
 }
 
 # --- Testes de Erro ---
-@test "19. Invalid command - too few arguments for -a" {
+@test "26. Invalid command - too few arguments for -a" {
     run "$CLIENT_EXEC" -a "JustBatsTitle"
     assert_success
     assert_output --partial "Erro: argumentos insuficientes para ADD"
 }
 
-@test "20. Invalid command - wrong flag '-x'" {
+@test "27. Invalid command - wrong flag '-x'" {
     run "$CLIENT_EXEC" -x "somevalue"
     assert_failure
     assert_output --partial "Comando inválido"
 }
+
+# --- Teste de indexação única ---
+
+@test "28. Prevent duplicate indexing of same document (doc2_bats.txt)" {
+    # Segunda indexação com o mesmo ficheiro
+    run "$CLIENT_EXEC" -a "Bats Title Duplicate" "Author Dup" "2024" "doc2_bats.txt"
+    assert_success
+    assert_output --partial "Ficheiro já indexado"
+}
+
+

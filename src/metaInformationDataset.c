@@ -10,6 +10,7 @@
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 
+
 MetaInformationDataset *metaInformationDataset_new(const char *document_folder) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformationQueue = g_queue_new();
@@ -105,6 +106,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     char caminhoCompleto[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(caminhoCompleto, sizeof(caminhoCompleto), dataset, metaInfo);
 
+
     int doc_fd = open(caminhoCompleto, O_RDONLY);
     if (doc_fd == -1) {
         perror("[DEBUG] Ficheiro do documento não encontrado");
@@ -112,6 +114,30 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
         return -1;
     }
     close(doc_fd);
+
+    //  Verificar duplicação: percorre metainformações já existentes 
+    //NOTA: isto é muito pouco eficiente, rever se há melhor maneira de verificar
+        MetaInformation existente;
+        int pos = 0;
+        while (bufferedRead(fd, &existente, metaInformation_size()) == metaInformation_size()) {
+            if (metaInformation_is_deleted(&existente)) {
+                pos++;
+                continue;
+            }
+    
+            char caminhoCompletoExistente[MAX_PATH];
+            metaInformationDataset_buildfull_documentpath(caminhoCompletoExistente, sizeof(caminhoCompletoExistente), dataset, &existente);
+    
+            if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
+                fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
+                close(fd);
+                return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
+            }
+    
+            pos++;
+        }
+
+    //
 
     int id;
 
@@ -367,16 +393,8 @@ char *metaInformationDataset_search_documents_sequential(MetaInformationDataset 
 }
 
 char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *dataset, const char *keyword, int max_procs) {
-
-    /*
     GString *resultado = g_string_new("[");
-    GHashTableIter iter;
-    gpointer key, value;
-    g_hash_table_iter_init(&iter, dataset->MetaInformation);
-
     GArray *matching_ids = g_array_new(FALSE, FALSE, sizeof(int));
-    int active_children = 0;
-
     // Para guardar pids e respetivos doc_ids
     typedef struct {
         pid_t pid;
@@ -385,14 +403,25 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
 
     GArray *children = g_array_new(FALSE, FALSE, sizeof(ChildInfo));
 
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        if (value == NULL) continue;
+    int fd = open(dataset->filename, O_RDONLY);
+    if (fd == -1) {
+        perror("[DEBUG] Erro ao abrir ficheiro de metainformação");
+        return NULL;
+    }
 
-        MetaInformation *meta = (MetaInformation *)value;
-        int doc_id = GPOINTER_TO_INT(key);
+    int active_children = 0;
+    int doc_id = 0;
+    MetaInformation meta;
+
+    while (read(fd, &meta, sizeof(MetaInformation)) == sizeof(MetaInformation)) {
+
+        if (metaInformation_is_deleted(&meta)) {
+            doc_id++;
+            continue;
+        }
 
         char fullpath[MAX_PATH];
-        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
+        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, &meta);
 
         pid_t pid = fork();
         if (pid == 0) {
@@ -405,7 +434,7 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
             active_children++;
         }
 
-        // Se atingimos o limite, espera por algum
+        // Se atingimos o limite de processos, espera por algum
         if (active_children >= max_procs) {
             int status;
             pid_t ended = wait(&status);
@@ -423,11 +452,11 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
                     break;  // Só pode haver um com este pid
                 }
             }
-            
         }
+        doc_id++;
     }
 
-    // Espera por os restantes filhos
+    // Espera pelos  restantes filhos
     while (active_children > 0) {
         int status;
         pid_t ended = wait(&status);
@@ -452,9 +481,6 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
     g_array_free(children, TRUE);
     g_string_append(resultado, "]");
     return g_string_free(resultado, FALSE);
-
-    */
-   return NULL;
 }
 
 
