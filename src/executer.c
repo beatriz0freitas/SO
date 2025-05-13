@@ -167,9 +167,27 @@ char *executer_execute(Executer *executer, Command *command, MetaInformationData
         }
 
         case CMD_SEARCH_PROCESSOS: {
+            if (command_get_num_args(command) < 2) {
+                snprintf(resposta, 100, "Erro: keyword ou número de processos não fornecido");
+                break;
+            }
             char *keyword = command_get_arg_por_indice(command, 0);
+            if (!keyword) {
+                strcpy(resposta, "Erro: keyword inválida.");
+                break;
+            }
             int num_processos = atoi(command_get_arg_por_indice(command, 1));
-            //TODO
+            if (num_processos <= 0) {
+                strcpy(resposta, "Erro: número de processos inválido.");
+                break;
+            }
+            char *result = metaInformationDataset_search_documents_parallel(dataset, keyword, num_processos);
+            if (result != NULL) {
+                sprintf(resposta, "%s", result);
+                g_free(result);
+            } else {
+                strcpy(resposta, "[]");
+            }
             break;
         }
 

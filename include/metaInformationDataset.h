@@ -25,6 +25,8 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key);
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword);
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword);
+char *metaInformationDataset_search_documents_sequential(MetaInformationDataset *dataset, const char *keyword);
+char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *dataset, const char *keyword, int max_procs);
 void metaInformationDataset_free(MetaInformationDataset *dataset);
 
 #endif
