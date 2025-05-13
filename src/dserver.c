@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
         // Executa
         char *resp = executer_execute(executer, cmd, dataset, &terminar);
-        printf("[DEBUG] Enviando resposta para %s: \"%s\"\n", msg.fifo_client, resp);
+        //printf("[DEBUG] Enviando resposta para %s: \"%s\"\n", msg.fifo_client, resp);
         dserver_sendResponse(msg.fifo_client, resp);
         free(resp);
     }
