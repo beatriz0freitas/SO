@@ -42,7 +42,7 @@ test/test_libs:
 	@git clone https://github.com/bats-core/bats-support test/test_libs/bats-support
 	@git clone https://github.com/bats-core/bats-assert test/test_libs/bats-assert
 
-test_features: cleanAll test/test_libs
+test_features: test/test_libs
 	@echo "[INFO] Running Bats tests in test/features_tests.bats..."
 	bats --formatter pretty  test/features_tests.bats; \
 	@echo "[INFO] Bats test run complete."
