@@ -31,6 +31,7 @@ typedef struct Command {
 } Command;
 
 CommandFlag command_parse_flag(char *flagStr, int numArgs);
+const char *commandFlag_to_string(CommandFlag flag);
 Command command_constroi_de_linha(int numArgs, char *linha[]);
 
 int command_get_num_args(Command *cmd);
