@@ -69,15 +69,17 @@ int main(int argc, char *argv[]) {
     int fd_server = open(fifo_clientToServer, O_RDONLY);
     if (fd_server == -1) {
         perror("[Server] Erro ao abrir fifo_clientToServer");
-        // TODO: Libertar 'executer' e 'dataset' aqui antes de sair em caso de erro.
+        executer_free(executer);
+        metaInformationDataset_free(dataset);
         return 1;
     }
     // Mantém um escritor aberto para não EOF
     int fd_dummy = open(fifo_clientToServer, O_WRONLY);
     if (fd_dummy == -1) {
         perror("[Server] Erro ao abrir fifo_clientToServer para escrita");
-        close(fd_server); // TODO: Fechar fd_server aqui.
-        // TODO: Libertar 'executer' e 'dataset' aqui antes de sair em caso de erro.
+        close(fd_server); 
+        executer_free(executer);
+        metaInformationDataset_free(dataset);
         return 1;
     }
 
@@ -91,6 +93,11 @@ int main(int argc, char *argv[]) {
 
 
     while (!terminar_pai && (nbytes = bufferedRead(fd_server, &msg, sizeof(Message))) > 0) {
+
+        // Recolhe processos filhos terminados para evitar zombies
+        while (waitpid(-1, NULL, WNOHANG) > 0);
+
+
         Command *cmd_ptr = message_get_command(&msg);
         MetaInformation *info_ptr = message_get_metaInformation(&msg); // Mantido como no original
 
@@ -127,12 +134,14 @@ int main(int argc, char *argv[]) {
             }
 
             pid_t pid = fork();
+
             if (pid == -1) {
                 perror("[Server Parent] Erro no fork");
                 // TODO: Enviar uma resposta de erro ao cliente se o fork falhar.
             } else if (pid == 0) { // Processo Filho
-                // TODO: O filho DEVE fechar fd_server e fd_dummy pois não os usa.
-                // Ex: close(fd_server); close(fd_dummy);
+
+                close(fd_server);
+                close(fd_dummy);
 
                 // O filho usa os ponteiros 'executer' e 'dataset' do pai.
                 // O SO trata da cópia de memória (Copy-on-Write) se o filho tentar
@@ -150,8 +159,10 @@ int main(int argc, char *argv[]) {
                     dserver_sendResponse(msg.fifo_client, resp);
                     free(resp);
                 } else {
-                    // TODO: Melhorar mensagem de erro, talvez com base no tipo de comando.
-                    dserver_sendResponse(msg.fifo_client, "Erro no processamento do comando (filho).");
+                    char error_msg[128];
+                    sprintf(error_msg, sizeof(error_msg), "Erro ao processar o comando: %s", commandFlag_to_string(current_command_flag));
+                    dserver_sendResponse(msg.fifo_client, error_msg);
+
                 }
 
                 // TODO: Numa implementação final, o filho deveria libertar quaisquer recursos
@@ -164,7 +175,6 @@ int main(int argc, char *argv[]) {
             }
             // Processo Pai continua o loop IMEDIATAMENTE.
             // NÃO espera pelo filho aqui (o que levará a processos zombie).
-            // TODO: Adicionar gestão de zombies no pai (ex: waitpid com WNOHANG neste loop ou SIGCHLD handler).
         } else { // Operações de escrita (CMD_ADD, CMD_DELETE) ou CMD_INVALID - executadas sequencialmente pelo PAI
             if (terminar_pai) { // Se o servidor está a terminar, não processa novas escritas
                 dserver_sendResponse(msg.fifo_client, "Servidor em processo de encerramento. Comando rejeitado.");
@@ -184,8 +194,9 @@ int main(int argc, char *argv[]) {
                     dserver_sendResponse(msg.fifo_client, resp);
                     free(resp);
                 } else {
-                    // TODO: Melhorar mensagem de erro.
-                    dserver_sendResponse(msg.fifo_client, "Erro no processamento do comando (pai).");
+                    char error_msg[128];
+                    sprintf(error_msg, sizeof(error_msg), "Erro ao processar o comando: %s", commandFlag_to_string(current_command_flag));
+                    dserver_sendResponse(msg.fifo_client, error_msg);
                 }
             }
         }
@@ -208,9 +219,11 @@ int main(int argc, char *argv[]) {
     // que o SO faça copy-on-write para memória, descritores de ficheiro dentro dessas
     // estruturas poderiam ser um problema se não geridos cuidadosamente).
     // Um loop com wait() bloqueante é uma forma de esperar por todos os filhos.
-    // Ex: while(wait(NULL) > 0 || (wait(NULL) == -1 && errno == EINTR));
+
     // AVISO: Se esta limpeza final não for suficiente e não houver reaping no loop,
     // zombies persistirão até o servidor realmente terminar.
+
+    while(wait(NULL) > 0 || (wait(NULL) == -1 && errno == EINTR));
 
     metaInformationDataset_free(dataset);
     executer_free(executer);
