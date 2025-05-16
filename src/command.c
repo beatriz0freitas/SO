@@ -16,6 +16,21 @@ CommandFlag command_parse_flag(char *flagStr, int numArgs) {
     return CMD_INVALID;
 }
 
+
+const char *commandFlag_to_string(CommandFlag flag) {
+    switch (flag) {
+        case CMD_ADD: return "Indexar";
+        case CMD_CONSULT: return "Consultar";
+        case CMD_DELETE: return "Remover";
+        case CMD_LIST: return "Pesquisa n.º de linhas";
+        case CMD_SEARCH: return "Listar id's";
+        case CMD_SEARCH_PROCESSOS: return "Listar id's com n processos"; // mesma flag
+        case CMD_SHUTDOWN: return "Fechar";
+        default: return "INVALID";
+    }
+}
+
+
 Command command_constroi_de_linha(int numArgs, char *linha[]) {
 
     Command cmd;

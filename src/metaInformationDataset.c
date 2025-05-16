@@ -41,7 +41,7 @@ void metaInformationDataset_store(MetaInformationDataset *dataset) {
         bufferedWrite(fd, &pos, sizeof(int));
     }
 
-    close(fd);
+    close_with_unlock(fd);
 }
 
 
@@ -57,7 +57,7 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
     if (filesize < sizeof(int) + sizeof(guint)) {
         // Ficheiro demasiado pequeno para conter dados válidos
         printf("[DEBUG] Ficheiro existe mas está vazio ou incompleto.\n");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
@@ -65,14 +65,14 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
 
     if (bufferedRead(fd, &dataset->nextindex, sizeof(int)) != sizeof(int)) {
         perror("[DEBUG]: Erro ao ler nextindex");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
     guint freeCount;
     if (bufferedRead(fd, &freeCount, sizeof(guint)) != sizeof(guint)) {
         perror("[DEBUG]: Erro ao ler freeCount");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
@@ -84,7 +84,7 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
         }
         g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(pos));
     }
-    close(fd);
+    close_with_unlock(fd);
 }
 */
 
@@ -96,7 +96,7 @@ void metaInformationDataset_buildfull_documentpath(char *dest, size_t size, cons
 // Indexa a metaInformação, Atribui o ID reutilizado se disponível, senão usa o nextindex. (id é a posição da metainformação no ficheiro)
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
    
-    int fd = open(dataset->filename, O_CREAT | O_RDWR, 0666); // O_APPEND removido para controlo manual do offset
+    int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX); // O_APPEND removido para controlo manual do offset
     if (fd == -1) {
         perror("[DEBUG]: Erro ao abrir ficheiro");
         return -1;
@@ -107,13 +107,13 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     metaInformationDataset_buildfull_documentpath(caminhoCompleto, sizeof(caminhoCompleto), dataset, metaInfo);
 
 
-    int doc_fd = open(caminhoCompleto, O_RDONLY);
+    int doc_fd = open_with_lock(caminhoCompleto, O_RDONLY, 0, LOCK_SH);
     if (doc_fd == -1) {
         perror("[DEBUG] Ficheiro do documento não encontrado");
-        close(fd);
+        close_with_unlock(fd);
         return -1;
     }
-    close(doc_fd);
+    close_with_unlock(doc_fd);
 
     //  Verificar duplicação: percorre metainformações já existentes 
     //NOTA: isto é muito pouco eficiente, rever se há melhor maneira de verificar
@@ -130,7 +130,7 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     
             if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
                 fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
-                close(fd);
+                close_with_unlock(fd);
                 return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
             }
     
@@ -153,11 +153,11 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
     if (bufferedWrite(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("[DEBUG]: Erro a escrever no ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return -1;
     }
 
-    close(fd);
+    close_with_unlock(fd);
 
     //TODO: meter na cache
     // Copiar para memória independente antes de inserir na hash table
@@ -176,7 +176,7 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 
     int posicao_registo = key; //posição no ficheiro é igual ao id
 
-    int fd = open(dataset->filename, O_RDWR);
+    int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX);
     if (fd == -1) {
         perror("Erro ao abrir ficheiro");
         return FALSE;
@@ -188,11 +188,12 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     MetaInformation metaInfo;
     if (bufferedRead(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao ler do ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return FALSE;
     }
 
     if (metaInformation_is_deleted(&metaInfo)){
+        close_with_unlock(fd);
         return FALSE;
     }
 
@@ -202,11 +203,11 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
     if (bufferedWrite(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao escrever no ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return FALSE;
     }
 
-    close(fd);
+    close_with_unlock(fd);
 
     // Atualiza dataset (adiciona o id á stack de ids de metainformação apagados, para ser utilizada posteriormente)
     g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao_registo));
@@ -224,7 +225,7 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     //TODO: ver se tem na cache primeiro para evitar ter de ir ao ficheiro
     //int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
  
-    int fd = open(dataset->filename, O_RDONLY);
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
     if (fd == -1) {
         perror("Erro ao abrir ficheiro");
         return NULL;
@@ -237,11 +238,11 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
     if (bufferedRead(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro a ler do ficheiro");
         g_free(metaInfo);
-        close(fd);
+        close_with_unlock(fd);
         return NULL;
     }
 
-    close(fd);
+    close_with_unlock(fd);
 
     if (metaInformation_is_deleted(metaInfo)) {
         g_free(metaInfo);
@@ -325,7 +326,7 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
 
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword) {
 
-    int fd = open(dataset->filename, O_RDONLY);
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
     if (fd == -1) {
         perror("[ERRO] Não foi possível abrir o ficheiro de metainformação");
         return g_strdup("[]");
@@ -403,7 +404,7 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
 
     GArray *children = g_array_new(FALSE, FALSE, sizeof(ChildInfo));
 
-    int fd = open(dataset->filename, O_RDONLY);
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
     if (fd == -1) {
         perror("[DEBUG] Erro ao abrir ficheiro de metainformação");
         return NULL;

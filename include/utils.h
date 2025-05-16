@@ -6,6 +6,14 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define FIFO_CLIENT_TO_SERVER "fifos/clientToServer"
+#define FIFO_TEMPLATE_SERVER_TO_CLIENT "fifos/serverToClient_%d"
+
+
+int open_with_lock(const char *path, int flags, mode_t mode, int lock_type);
+int close_with_unlock(int fd);
+
+
 ssize_t bufferedRead(int fd, void *buf, size_t count);
 ssize_t bufferedWrite (int fd, const void *buf, size_t count);
 int mysystem(const char *command_line);

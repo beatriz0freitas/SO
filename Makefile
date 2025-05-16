@@ -42,19 +42,9 @@ test/test_libs:
 	@git clone https://github.com/bats-core/bats-support test/test_libs/bats-support
 	@git clone https://github.com/bats-core/bats-assert test/test_libs/bats-assert
 
-test: cleanAll test/test_libs
-	@echo "[INFO] Running Bats tests in test/tests.bats..."
-	@if command -v bats >/dev/null 2>&1; then \
-		if [ -f test/tests.bats ]; then \
-			bats --formatter pretty  test/tests.bats; \
-		else \
-			echo "[ERROR] test/tests.bats not found."; \
-			exit 1; \
-		fi; \
-	else \
-		echo "[ERROR] 'bats' command not found. Please install Bats."; \
-		exit 1; \
-	fi
+test_features: test/test_libs
+	@echo "[INFO] Running Bats tests in test/features_tests.bats..."
+	bats --formatter pretty  test/features_tests.bats; \
 	@echo "[INFO] Bats test run complete."
 
 
