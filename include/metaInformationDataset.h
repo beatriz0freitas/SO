@@ -18,7 +18,7 @@ typedef struct MetaInformationDataset{
 } MetaInformationDataset;
 
 
-MetaInformationDataset *metaInformationDataset_new(const char *document_folder);
+MetaInformationDataset *metaInformationDataset_new(const char *document_folder, int cache_size);
 
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo);
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key);

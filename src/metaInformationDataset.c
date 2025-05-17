@@ -12,14 +12,14 @@
 
 
 
-MetaInformationDataset *metaInformationDataset_new(const char *document_folder) {
+MetaInformationDataset *metaInformationDataset_new(const char *document_folder, int cache_size) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformationQueue = g_queue_new();
     dataset->nextindex = 1;
     strncpy(dataset->folder, document_folder, MAX_PATH-1);
     strncpy(dataset->filename,"information.bin", MAX_PATH - 1);
     dataset->folder[MAX_PATH-1] = '\0';
-    dataset->cache = cache_new(100); // Initialize cache with a default size of 100
+    dataset->cache = cache_new(cache_size); // Initialize cache with the provided size
     return dataset;
 }
 

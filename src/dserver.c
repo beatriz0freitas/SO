@@ -41,14 +41,21 @@ int main(int argc, char *argv[]) {
     }
 
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <document_folder>\n", argv[0]);
-        return 1;
+    if (argc < 3) {
+        fprintf(stderr, "Uso: %s <document_folder> <cache_size>\n", argv[0]);
+        exit(1);
     }
 
     // Apanha o caminho da pasta de documentos
     const char *document_folder = argv[1];
     printf("[DEBUG]: Servidor iniciado. Pasta dos documentos: %s\n", document_folder);
+
+    // Apanha o tamanho da cache
+    int cache_size = atoi(argv[2]);
+    if (cache_size <= 0) {
+        fprintf(stderr, "Erro: O tamanho da cache deve ser um número positivo.\n");
+        exit(1);
+    }
 
     // FIFO do servidor
     const char *fifo_clientToServer = "fifos/clientToServer";
@@ -61,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     // Inicializa estruturas
     Executer *executer = executer_new(); // Instância principal do PAI
-    MetaInformationDataset *dataset = metaInformationDataset_new(document_folder); // Instância principal do PAI
+    MetaInformationDataset *dataset = metaInformationDataset_new(document_folder, cache_size); // Instância principal do PAI
 
     //metaInformationDataset_load(dataset);
 
