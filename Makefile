@@ -42,11 +42,35 @@ test/test_libs:
 	@git clone https://github.com/bats-core/bats-support test/test_libs/bats-support
 	@git clone https://github.com/bats-core/bats-assert test/test_libs/bats-assert
 
+test_start_stop:
+	@echo "[INFO] Running Bats tests in test/test_start_stop_server.bats..."
+	bats --formatter pretty  test/test_start_stop_server.bats; \
+	@echo "[INFO] Bats test run complete."
+
 test_features: test/test_libs
 	@echo "[INFO] Running Bats tests in test/features_tests.bats..."
 	bats --formatter pretty  test/features_tests.bats; \
 	@echo "[INFO] Bats test run complete."
 
+test_persistence: test/test_libs
+	@echo "[INFO] Running Bats tests in test/test_persistence.bats..."
+	bats --formatter pretty  test/test_persistence.bats; \
+	@echo "[INFO] Bats test run complete."
+
+test_paralell_search: test/test_libs
+	@echo "[INFO] Running Bats tests in test/test_parallel_search.bats..."
+	bats   --formatter pretty test/test_parallel_search.bats; \
+	@echo "[INFO] Bats performance test run complete."
+
+test_concurrency: test/test_libs
+	@echo "[INFO] Running Bats tests in test/test_concurrency.bats..."
+	bats --formatter pretty test/test_concurrency.bats; \
+    @echo "[INFO] Bats concurrency test run complete."
+
+
+reset_test_env: cleanAll
+	@echo "[Info] Ambiente de teste limpo"
+	@rm -f information.bin || true
 
 clean:
 	rm -f obj/*.o tmp/*

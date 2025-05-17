@@ -18,7 +18,7 @@ fi
 # --- Global Configuration ---
 readonly SERVER_EXEC="./bin/dserver"
 readonly CLIENT_EXEC="./bin/dclient"
-readonly TEST_DOC_FOLDER="documentos"
+readonly TEST_DOC_FOLDER="test/testdocs"
 readonly CACHE_SIZE="10"
 readonly SERVER_LOG_BATS="dserver_bats.log"
 readonly SERVER_FIFO_DIR_BATS="fifos"
@@ -41,23 +41,12 @@ setup_file() {
     echo "# Setting up for Bats tests..." >&2
     make all
 
-    #mkdir -p "$TEST_DOC_FOLDER"
-    #mkdir -p "$SERVER_FIFO_DIR_BATS"
-    #rm -f "$SERVER_DATA_FILE_BATS"
-
-    #if ! pgrep -x "dserver" > /dev/null; then
-    #    "$SERVER_EXEC" "$TEST_DOC_FOLDER" "$CACHE_SIZE" --data-file "$SERVER_DATA_FILE_BATS" > "$SERVER_LOG_BATS" 2>&1 &
-    #    readonly BATS_SERVER_PID=$!
-    #    export BATS_SERVER_PID
-    #    sleep 3
-    #fi
-
-    #if ! kill -0 "$BATS_SERVER_PID" 2>/dev/null; then
-    #    echo "# SERVER FAILED TO START. Check $SERVER_LOG_BATS" >&2
-    #    cat "$SERVER_LOG_BATS" >&2
-    #    return 1
-    #fi
-    #echo "# Server started (PID $BATS_SERVER_PID)" >&2
+    # Verifica se o servidor está a correr
+    echo "# Verificando se o servidor está ativo..." >&2
+    if ! pgrep -f "$SERVER_EXEC" > /dev/null; then
+        echo "[ERRO] O servidor '$SERVER_EXEC' não está a correr. Inicia-o manualmente antes do teste." >&2
+        exit 1
+    fi
 
     create_test_document "doc1_bats.txt" \
         "Hello from bats document one. apple keyword." \
@@ -86,12 +75,7 @@ teardown_file() {
     else
         echo "# Server not running or PID invalid." >&2
     fi
-    #rm -rf "$TEST_DOC_FOLDER"
-    rm -f "$SERVER_LOG_BATS"
-    #if [ -d "$SERVER_FIFO_DIR_BATS" ]; then
-        #find "$SERVER_FIFO_DIR_BATS" -type p -delete 2>/dev/null
-        #rmdir "$SERVER_FIFO_DIR_BATS" 2>/dev/null || echo "# Warning: $SERVER_FIFO_DIR_BATS not empty." >&2
-    #fi
+    rm -rf "$TEST_DOC_FOLDER"
     rm -f "$SERVER_DATA_FILE_BATS"
     echo "# Bats cleanup complete." >&2
 }
@@ -299,5 +283,37 @@ trap teardown_file EXIT
     assert_success
     assert_output --partial "Ficheiro já indexado"
 }
+
+
+@test "29. Indexar ficheiro inexistente deve falhar" {
+    run "$CLIENT_EXEC" -a "Titulo Invalido" "Autor Z" "2023" "inexistente.txt"
+    assert_success
+    assert_output --regexp "Erro ao indexar o ficheiro|Erro"
+}
+
+@test "30. Consultar documento com ID inexistente" {
+    run "$CLIENT_EXEC" -c 9999
+    assert_success
+    assert_output --partial "Document not found"
+}
+
+@test "31. Remover documento com ID inexistente" {
+    run "$CLIENT_EXEC" -d 9999
+    assert_success
+    assert_output --partial "Entry not found"
+}
+ 
+@test "32. Contar linhas com ID inexistente" {
+    run "$CLIENT_EXEC" -l 9999 "banana"
+    assert_success
+    assert_output --regexp "Error counting keyword occurrences|Erro"
+}
+
+@test "33. Pesquisar com keyword contendo pontuação" {
+    run "$CLIENT_EXEC" -s "banana!"
+    assert_success
+    assert_output --regexp "\[.*\]|\[\]"
+}
+
 
 
