@@ -6,94 +6,28 @@
 #include <stdio.h>
 #include <sys/wait.h>
 #include "utils.h"
+#include "cache.h"
 
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 
 
-MetaInformationDataset *metaInformationDataset_new(const char *document_folder) {
+MetaInformationDataset *metaInformationDataset_new(const char *document_folder, int cache_size) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformationQueue = g_queue_new();
     dataset->nextindex = 1;
     strncpy(dataset->folder, document_folder, MAX_PATH-1);
     strncpy(dataset->filename,"information.bin", MAX_PATH - 1);
     dataset->folder[MAX_PATH-1] = '\0';
+    dataset->cache = cache_new(cache_size); // Initialize cache with the provided size
     return dataset;
 }
 
-/* SERA UTIL PAARA GUARDAR EM DISCO
-void metaInformationDataset_store(MetaInformationDataset *dataset) {
-    int fd = open(dataset->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) {
-        perror("Erro ao abrir ficheiro para escrita");
-        return;
-    }
-
-    bufferedWrite(fd, &dataset->nextindex, sizeof(int));
-
-    // Guarda o tamanho da queue
-    guint freeCount = g_queue_get_length(dataset->MetaInformationQueue);
-    bufferedWrite(fd, &freeCount, sizeof(guint));
-
-    // Guarda os elementos da queue (inteiros)
-    for (GList *l = dataset->MetaInformationQueue->head; l != NULL; l = l->next) {
-        int pos = GPOINTER_TO_INT(l->data);
-        bufferedWrite(fd, &pos, sizeof(int));
-    }
-
-    close_with_unlock(fd);
-}
-
-
-void metaInformationDataset_load(MetaInformationDataset *dataset) {
-    int fd = open(dataset->filename, O_RDONLY);
-    if (fd < 0) {
-        perror("[DEBUG]: Ficheiro de meta-informação não encontrado, a começar vazio");
-        return;
-    }
-    
-    // Verifica o tamanho do ficheiro
-    off_t filesize = lseek(fd, 0, SEEK_END);
-    if (filesize < sizeof(int) + sizeof(guint)) {
-        // Ficheiro demasiado pequeno para conter dados válidos
-        printf("[DEBUG] Ficheiro existe mas está vazio ou incompleto.\n");
-        close_with_unlock(fd);
-        return;
-    }
-
-    lseek(fd, 0, SEEK_SET);  // Voltar ao início para ler
-
-    if (bufferedRead(fd, &dataset->nextindex, sizeof(int)) != sizeof(int)) {
-        perror("[DEBUG]: Erro ao ler nextindex");
-        close_with_unlock(fd);
-        return;
-    }
-
-    guint freeCount;
-    if (bufferedRead(fd, &freeCount, sizeof(guint)) != sizeof(guint)) {
-        perror("[DEBUG]: Erro ao ler freeCount");
-        close_with_unlock(fd);
-        return;
-    }
-
-    for (guint i = 0; i < freeCount; i++) {
-        int pos;
-        if (bufferedRead(fd, &pos, sizeof(int)) != sizeof(int)) {
-            perror("[DEBUG]: Erro ao ler posição livre");
-            break;
-        }
-        g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(pos));
-    }
-    close_with_unlock(fd);
-}
-*/
 
 void metaInformationDataset_buildfull_documentpath(char *dest, size_t size, const MetaInformationDataset *dataset, const MetaInformation *info) {
     snprintf(dest, size, "%s/%s", dataset->folder, info->path);
 }
 
-
-// Indexa a metaInformação, Atribui o ID reutilizado se disponível, senão usa o nextindex. (id é a posição da metainformação no ficheiro)
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
    
     int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX); // O_APPEND removido para controlo manual do offset
@@ -159,22 +93,12 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 
     close_with_unlock(fd);
 
-    //TODO: meter na cache
-    // Copiar para memória independente antes de inserir na hash table
-    /*
-    MetaInformation *copia = g_new(MetaInformation, 1);
-    memcpy(copia, metaInfo, sizeof(MetaInformation));
-    g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(id), copia);
-    */
-    //metaInformationDataset_store(dataset);
-
     return id;
 }
 
-
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key) {
 
-    int posicao_registo = key; //posição no ficheiro é igual ao id
+    int posicao_registo = key; 
 
     int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX);
     if (fd == -1) {
@@ -212,19 +136,18 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     // Atualiza dataset (adiciona o id á stack de ids de metainformação apagados, para ser utilizada posteriormente)
     g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao_registo));
 
-    //TODO: remove da cache se tiver
+    cache_remove(dataset->cache, key); 
 
-    // g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
-
-    //metaInformationDataset_store(dataset);
 
     return TRUE;
 }
 
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-    //TODO: ver se tem na cache primeiro para evitar ter de ir ao ficheiro
-    //int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
- 
+    MetaInformation *cached_info = cache_get(dataset->cache, key);
+    if (cached_info) {
+        return cached_info;
+    }
+
     int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
     if (fd == -1) {
         perror("Erro ao abrir ficheiro");
@@ -249,6 +172,7 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
         return NULL;
     }
 
+    cache_put(dataset->cache, key, metaInfo);
     return metaInfo;
 }
 
@@ -484,13 +408,15 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
     return g_string_free(resultado, FALSE);
 }
 
-
-
 void metaInformationDataset_free(MetaInformationDataset *dataset) {
     if (dataset) {
 
         if (dataset->MetaInformationQueue) {
             g_queue_free(dataset->MetaInformationQueue);
+        }
+
+        if (dataset->cache) {
+            cache_free(dataset->cache);
         }
 
         g_free(dataset);

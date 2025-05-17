@@ -25,16 +25,17 @@ run: folders all
 	@bin/addGdatasetMetadata.sh Gcatalog.tsv
 
 
-bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o obj/cache.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
-bin/dclient: obj/dclient.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+bin/dclient: obj/dclient.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o obj/cache.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
 
 # Compile the source files into object files
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+
 
 test/test_libs:
 	@echo "[INFO] Cloning Bats test libraries..."
@@ -48,8 +49,8 @@ test_start_stop:
 	@echo "[INFO] Bats test run complete."
 
 test_features: test/test_libs
-	@echo "[INFO] Running Bats tests in test/features_tests.bats..."
-	bats --formatter pretty  test/features_tests.bats; \
+	@echo "[INFO] Running Bats tests in test/test_features.bats..."
+	bats --formatter pretty  test/test_features.bats; \
 	@echo "[INFO] Bats test run complete."
 
 test_persistence: test/test_libs
