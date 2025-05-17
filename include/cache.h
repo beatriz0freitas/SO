@@ -28,7 +28,7 @@ typedef struct Cache {
 } Cache;
 
 /**
- * @brief Cria um novo cache com tamanho máximo definido.
+ * @brief Cria uma nova cache com tamanho máximo definido.
  *
  * @param max_size Número máximo de elementos permitidos no cache.
  * @return Ponteiro para a nova estrutura Cache.
@@ -36,14 +36,14 @@ typedef struct Cache {
 Cache *cache_new(int max_size);
 
 /**
- * @brief Libera toda a memória associada ao cache.
+ * @brief Libera toda a memória associada à cache.
  *
  * @param cache Ponteiro para a estrutura Cache a ser liberada.
  */
 void cache_free(Cache *cache);
 
 /**
- * @brief Recupera um elemento do cache baseado na chave.
+ * @brief Recupera um elemento da cache baseado na chave.
  *
  * @param cache Ponteiro para a estrutura Cache.
  * @param key Chave inteira do elemento a ser recuperado.
@@ -52,7 +52,7 @@ void cache_free(Cache *cache);
 MetaInformation *cache_get(Cache *cache, int key);
 
 /**
- * @brief Insere um novo elemento no cache.
+ * @brief Insere um novo elemento na cache.
  *
  * Se a chave já existir, atualiza o valor e move a chave para o fim da fila.
  * Se o cache estiver cheio, remove o elemento mais antigo (FIFO).
@@ -64,7 +64,7 @@ MetaInformation *cache_get(Cache *cache, int key);
 void cache_put(Cache *cache, int key, MetaInformation *value);
 
 /**
- * @brief Remove um elemento do cache baseado na chave.
+ * @brief Remove um elemento da cache baseado na chave.
  *
  * @param cache Ponteiro para a estrutura Cache.
  * @param key Chave inteira do elemento a ser removido.

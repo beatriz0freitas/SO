@@ -11,7 +11,6 @@
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 
-
 MetaInformationDataset *metaInformationDataset_new(const char *document_folder, int cache_size) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
     dataset->MetaInformationQueue = g_queue_new();
@@ -22,7 +21,6 @@ MetaInformationDataset *metaInformationDataset_new(const char *document_folder, 
     dataset->cache = cache_new(cache_size); // Initialize cache with the provided size
     return dataset;
 }
-
 
 void metaInformationDataset_buildfull_documentpath(char *dest, size_t size, const MetaInformationDataset *dataset, const MetaInformation *info) {
     snprintf(dest, size, "%s/%s", dataset->folder, info->path);
@@ -40,7 +38,6 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     char caminhoCompleto[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(caminhoCompleto, sizeof(caminhoCompleto), dataset, metaInfo);
 
-
     int doc_fd = open_with_lock(caminhoCompleto, O_RDONLY, 0, LOCK_SH);
     if (doc_fd == -1) {
         perror("[DEBUG] Ficheiro do documento não encontrado");
@@ -50,31 +47,26 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     close_with_unlock(doc_fd);
 
     //  Verificar duplicação: percorre metainformações já existentes 
-    //NOTA: isto é muito pouco eficiente, rever se há melhor maneira de verificar
-        MetaInformation existente;
-        int pos = 0;
-        while (bufferedRead(fd, &existente, metaInformation_size()) == metaInformation_size()) {
-            if (metaInformation_is_deleted(&existente)) {
-                pos++;
-                continue;
-            }
-    
-            char caminhoCompletoExistente[MAX_PATH];
-            metaInformationDataset_buildfull_documentpath(caminhoCompletoExistente, sizeof(caminhoCompletoExistente), dataset, &existente);
-    
-            if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
-                fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
-                close_with_unlock(fd);
-                return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
-            }
-    
+    MetaInformation existente;
+    int pos = 0;
+    while (bufferedRead(fd, &existente, metaInformation_size()) == metaInformation_size()) {
+        if (metaInformation_is_deleted(&existente)) {
             pos++;
+            continue;
         }
 
-    //
+        char caminhoCompletoExistente[MAX_PATH];
+        metaInformationDataset_buildfull_documentpath(caminhoCompletoExistente, sizeof(caminhoCompletoExistente), dataset, &existente);
+
+        if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
+            fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
+            close_with_unlock(fd);
+            return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
+        }
+        pos++;
+    }
 
     int id;
-
     if (g_queue_is_empty(dataset->MetaInformationQueue)) {
         id = dataset->nextindex++;  // Novo ID sequencial
     } else {
@@ -150,7 +142,6 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 }
 
 
-
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
     MetaInformation *cached_info = cache_get(dataset->cache, key);
     if (cached_info) {
@@ -181,7 +172,6 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
         return NULL;
     }
 
-    //cache_put(dataset->cache, key, metaInfo); // chache-aside
     return metaInfo;
 }
 

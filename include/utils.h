@@ -16,18 +16,6 @@
  * de forma segura e controlada.
  */
 
-/** 
- * @def FIFO_CLIENT_TO_SERVER
- * @brief Nome do FIFO para comunicação do cliente para o servidor.
- */
-
-/**
- * @def FIFO_TEMPLATE_SERVER_TO_CLIENT
- * @brief Template do nome do FIFO para comunicação do servidor para o cliente.
- *        O %d deve ser substituído pelo PID do cliente.
- */
-
-
 /**
  * @brief Abre um ficheiro com o tipo de lock especificado.
  * 
@@ -75,17 +63,5 @@ ssize_t bufferedRead(int fd, void *buf, size_t count);
  */
 ssize_t bufferedWrite (int fd, const void *buf, size_t count);
 
-/**
- * @brief Executa um comando do sistema, similar à função system(), mas usando fork e execvp.
- * 
- * @param command_line Linha de comando a executar (ex: "ls -l /tmp").
- * 
- * @return O status do processo filho (retornado por waitpid),
- *         ou -1 em caso de erro.
- * 
- * @note Esta função divide a linha de comando em argumentos e executa com execvp.
- *       O processo pai espera o filho terminar e retorna o seu status.
- */
-int mysystem(const char *command_line);
 
 #endif

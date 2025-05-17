@@ -160,8 +160,6 @@ static char *handle_shutdown(gboolean *terminar_servidor) {
     return g_strdup("Servidor encerrado com sucesso.");
 }
 
-
-//NOTA: Falta adaptar isto para executar com varios utilizadores ao mesmo tempo
 char *executer_execute(Executer *executer, Command *command, MetaInformationDataset *dataset, gboolean *terminar_servidor) {
     if (!executer || !command || !dataset || !terminar_servidor) {
         return g_strdup("Erro interno: ponteiro NULL recebido.");
