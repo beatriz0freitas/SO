@@ -14,5 +14,6 @@ Cache *cache_new(int max_size);
 void cache_free(Cache *cache);
 MetaInformation *cache_get(Cache *cache, int key);
 void cache_put(Cache *cache, int key, MetaInformation *value);
+void cache_remove(Cache *cache, int key);
 
 #endif

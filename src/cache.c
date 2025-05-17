@@ -49,3 +49,15 @@ void cache_put(Cache *cache, int key, MetaInformation *value) {
     g_queue_push_tail(cache->queue, key_ptr);
     g_hash_table_insert(cache->table, key_ptr, value);
 }
+
+void cache_remove(Cache *cache, int key) {
+    int *key_ptr = g_new(int, 1);
+    *key_ptr = key;
+
+    if (g_hash_table_contains(cache->table, key_ptr)) {
+        g_queue_remove(cache->queue, key_ptr);
+        g_hash_table_remove(cache->table, key_ptr);
+    }
+
+    g_free(key_ptr);
+}
