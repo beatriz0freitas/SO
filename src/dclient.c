@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-#include "command.h"
-#include "metaInformation.h"
 #include "utils.h"
 #include "message.h"
 
