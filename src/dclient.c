@@ -98,6 +98,8 @@ int main(int argc, char *argv[]) {
     dclient_sendMessage (fifo_serverToClient, &message);
     dclient_receiveMessage (fifo_serverToClient);
 
+    printf("[CLIENT PID %d] Finished operations, exiting.\n", getpid()); 
+
     return 0;
 }
 
