@@ -25,16 +25,17 @@ run: folders all
 	@bin/addGdatasetMetadata.sh Gcatalog.tsv
 
 
-bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+bin/dserver: obj/dserver.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o obj/cache.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
-bin/dclient: obj/dclient.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o
+bin/dclient: obj/dclient.o obj/command.o obj/utils.o obj/message.o obj/metaInformation.o obj/metaInformationDataset.o obj/executer.o obj/cache.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
 
 # Compile the source files into object files
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+
 
 test/test_libs:
 	@echo "[INFO] Cloning Bats test libraries..."
