@@ -9,7 +9,7 @@ readonly GCATALOG="Gcatalog.tsv"
 readonly CSV_RESULTS_FILE="test/test_cache_performance.csv"
 
 
-readonly CACHE_SIZE="10"
+readonly CACHE_SIZE="500"
 readonly TOTAL_DOCS_TO_INDEX=200  
 readonly NUM_CONSULT_QUERIES=1000  
 readonly PROBABILITY_OF_REPEATING_QUERY=50 

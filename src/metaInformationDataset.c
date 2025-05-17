@@ -88,11 +88,12 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     return id;
 }
 
-void metaInformationDataset_add_with_cache_write_through(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
+int metaInformationDataset_add_with_cache_write_through(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
     int id = metaInformationDataset_add(dataset, metaInfo);
     if (id >= 0) {
         cache_put(dataset->cache, id, metaInfo);
     }
+    return id;
 }
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key) {

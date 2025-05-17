@@ -39,6 +39,8 @@ MetaInformationDataset *metaInformationDataset_new(const char *document_folder, 
  */
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo);
 
+int metaInformationDataset_add_with_cache_write_through(MetaInformationDataset *dataset, MetaInformation *metaInfo);
+
 /**
  * Remove logicamente uma MetaInformation do dataset (tombstone).
  * 

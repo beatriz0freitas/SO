@@ -69,9 +69,9 @@ test_concurrency: test/test_libs
     @echo "[INFO] Bats concurrency test run complete."
 
 test_cache_performance:
-	@echo "[INFO] Running Bats tests in test/test_cache_performance.bats..."
-	bats --formatter pretty test/test_cache_performance.bats; \
-	@echo "[INFO] Bats cache performance test run complete."
+	echo "[INFO] Running Bats tests in test/test_cache_performance.bats..."
+	bats --formatter pretty test/test_cache_performance.bats;
+	echo "[INFO] Bats cache performance test run complete."
 
 reset_test_env: cleanAll
 	@echo "[Info] Ambiente de teste limpo"
