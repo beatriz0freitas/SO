@@ -48,8 +48,8 @@ test_start_stop:
 	@echo "[INFO] Bats test run complete."
 
 test_features: test/test_libs
-	@echo "[INFO] Running Bats tests in test/features_tests.bats..."
-	bats --formatter pretty  test/features_tests.bats; \
+	@echo "[INFO] Running Bats tests in test/test_features.bats..."
+	bats --formatter pretty  test/test_features.bats; \
 	@echo "[INFO] Bats test run complete."
 
 test_persistence: test/test_libs
