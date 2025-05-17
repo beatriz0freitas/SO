@@ -96,6 +96,13 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     return id;
 }
 
+void metaInformationDataset_add_with_cache_write_through(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
+    int id = metaInformationDataset_add(dataset, metaInfo);
+    if (id >= 0) {
+        cache_put(dataset->cache, id, metaInfo);
+    }
+}
+
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key) {
 
     int posicao_registo = key; 
@@ -142,6 +149,8 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
     return TRUE;
 }
 
+
+
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
     MetaInformation *cached_info = cache_get(dataset->cache, key);
     if (cached_info) {
@@ -172,7 +181,7 @@ MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset,
         return NULL;
     }
 
-    cache_put(dataset->cache, key, metaInfo);
+    //cache_put(dataset->cache, key, metaInfo); // chache-aside
     return metaInfo;
 }
 

@@ -77,7 +77,7 @@ reset_test_env: cleanAll
 	@echo "[Info] Ambiente de teste limpo"
 	@rm -f information.bin || true
 
-clean:
+clean: reset_test_env
 	rm -f obj/*.o tmp/*
 	rm -f bin/dserver bin/dclient
 
