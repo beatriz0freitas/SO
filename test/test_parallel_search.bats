@@ -35,7 +35,7 @@ stop_server() {
 }
 
 @test "99. Performance: sequential vs parallel search (1 to $MAX_PARALLEL_PROCS)" {
-    CSV_FILE="test/performance_results.csv"
+    CSV_FILE="test/parallel_search_results.csv"
 
     echo "# Starting performance test..."
     start_server
