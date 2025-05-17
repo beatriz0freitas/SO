@@ -57,6 +57,14 @@ void dclient_receiveMessage (const char* fifo_serverToClient) {
 
 int main(int argc, char *argv[]) {
 
+    //mensagem de debug
+    char cwd_buffer[256];
+    if (getcwd(cwd_buffer, sizeof(cwd_buffer)) != NULL) {
+        printf("[DEBUG]: Servidor a correr no diretório: %s\n", cwd_buffer);
+    } else {
+        perror("[DEBUG]: Erro ao obter o diretório atual (getcwd)");
+    }
+
     if (argc < 2) {
         fprintf(stderr, "Uso inválido\n");
         exit(1);
@@ -87,6 +95,8 @@ int main(int argc, char *argv[]) {
 
     dclient_sendMessage (fifo_serverToClient, &message);
     dclient_receiveMessage (fifo_serverToClient);
+
+    printf("[CLIENT PID %d] Finished operations, exiting.\n", getpid()); 
 
     return 0;
 }

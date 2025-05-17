@@ -10,9 +10,9 @@
 #define FILENAME "information.bin" // nome do ficheiro binário onde vamos guardar
 
 
+
 MetaInformationDataset *metaInformationDataset_new(const char *document_folder) {
     MetaInformationDataset * dataset = g_new0(MetaInformationDataset, 1);
-    dataset->MetaInformation = g_hash_table_new(g_direct_hash, g_direct_equal);
     dataset->MetaInformationQueue = g_queue_new();
     dataset->nextindex = 1;
     strncpy(dataset->folder, document_folder, MAX_PATH-1);
@@ -41,7 +41,7 @@ void metaInformationDataset_store(MetaInformationDataset *dataset) {
         bufferedWrite(fd, &pos, sizeof(int));
     }
 
-    close(fd);
+    close_with_unlock(fd);
 }
 
 
@@ -57,7 +57,7 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
     if (filesize < sizeof(int) + sizeof(guint)) {
         // Ficheiro demasiado pequeno para conter dados válidos
         printf("[DEBUG] Ficheiro existe mas está vazio ou incompleto.\n");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
@@ -65,14 +65,14 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
 
     if (bufferedRead(fd, &dataset->nextindex, sizeof(int)) != sizeof(int)) {
         perror("[DEBUG]: Erro ao ler nextindex");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
     guint freeCount;
     if (bufferedRead(fd, &freeCount, sizeof(guint)) != sizeof(guint)) {
         perror("[DEBUG]: Erro ao ler freeCount");
-        close(fd);
+        close_with_unlock(fd);
         return;
     }
 
@@ -84,7 +84,7 @@ void metaInformationDataset_load(MetaInformationDataset *dataset) {
         }
         g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(pos));
     }
-    close(fd);
+    close_with_unlock(fd);
 }
 */
 
@@ -93,10 +93,10 @@ void metaInformationDataset_buildfull_documentpath(char *dest, size_t size, cons
 }
 
 
-// Atribui o ID reutilizado se disponível, senão usa o nextindex.
+// Indexa a metaInformação, Atribui o ID reutilizado se disponível, senão usa o nextindex. (id é a posição da metainformação no ficheiro)
 int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation *metaInfo) {
    
-    int fd = open(dataset->filename, O_CREAT | O_RDWR, 0666); // O_APPEND removido para controlo manual do offset
+    int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX); // O_APPEND removido para controlo manual do offset
     if (fd == -1) {
         perror("[DEBUG]: Erro ao abrir ficheiro");
         return -1;
@@ -106,43 +106,66 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
     char caminhoCompleto[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(caminhoCompleto, sizeof(caminhoCompleto), dataset, metaInfo);
 
-    int doc_fd = open(caminhoCompleto, O_RDONLY);
+
+    int doc_fd = open_with_lock(caminhoCompleto, O_RDONLY, 0, LOCK_SH);
     if (doc_fd == -1) {
         perror("[DEBUG] Ficheiro do documento não encontrado");
-        close(fd);
+        close_with_unlock(fd);
         return -1;
     }
-    close(doc_fd);
+    close_with_unlock(doc_fd);
 
-    int id, posicao_registo;
+    //  Verificar duplicação: percorre metainformações já existentes 
+    //NOTA: isto é muito pouco eficiente, rever se há melhor maneira de verificar
+        MetaInformation existente;
+        int pos = 0;
+        while (bufferedRead(fd, &existente, metaInformation_size()) == metaInformation_size()) {
+            if (metaInformation_is_deleted(&existente)) {
+                pos++;
+                continue;
+            }
+    
+            char caminhoCompletoExistente[MAX_PATH];
+            metaInformationDataset_buildfull_documentpath(caminhoCompletoExistente, sizeof(caminhoCompletoExistente), dataset, &existente);
+    
+            if (strcmp(caminhoCompletoExistente, caminhoCompleto) == 0) {
+                fprintf(stderr, "[DEBUG] Documento já indexado: %s\n", caminhoCompleto);
+                close_with_unlock(fd);
+                return pos - CODIGOJAINDEXADO; // Código de erro para duplicado, mas possivel de transmitir a posição atual NOTA: rever isto
+            }
+    
+            pos++;
+        }
+
+    //
+
+    int id;
 
     if (g_queue_is_empty(dataset->MetaInformationQueue)) {
-        // Novo ID sequencial
-        id = dataset->nextindex++;
-        off_t posicao_bytes = lseek(fd, 0, SEEK_END) / metaInformation_size(); // última posição disponível
-        posicao_registo = posicao_bytes / metaInformation_size(); // última posição disponível
+        id = dataset->nextindex++;  // Novo ID sequencial
     } else {
-        // Reutiliza posição e ID antigos
-        id = GPOINTER_TO_INT(g_queue_pop_head(dataset->MetaInformationQueue));
-        posicao_registo = id; // Assumimos que ID e posição no ficheiro coincidem
+        id = GPOINTER_TO_INT(g_queue_pop_head(dataset->MetaInformationQueue));  // Reutiliza posição e ID antigos de uma metainformação apagada
     }
 
+    int posicao_registo = id; // Assumimos que ID e posição no ficheiro coincidem
     metaInformation_set_IdDocument(metaInfo, id);
 
     lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
     if (bufferedWrite(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("[DEBUG]: Erro a escrever no ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return -1;
     }
 
-    close(fd);
+    close_with_unlock(fd);
 
+    //TODO: meter na cache
     // Copiar para memória independente antes de inserir na hash table
+    /*
     MetaInformation *copia = g_new(MetaInformation, 1);
     memcpy(copia, metaInfo, sizeof(MetaInformation));
     g_hash_table_insert(dataset->MetaInformation, GINT_TO_POINTER(id), copia);
-
+    */
     //metaInformationDataset_store(dataset);
 
     return id;
@@ -150,41 +173,48 @@ int metaInformationDataset_add(MetaInformationDataset *dataset, MetaInformation 
 
 
 gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key) {
-    int posicao = GPOINTER_TO_INT(g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key)));
 
-    if (posicao == 0 && !g_hash_table_contains(dataset->MetaInformation, GINT_TO_POINTER(key))) {
-        return FALSE; // Não existe
-    }
+    int posicao_registo = key; //posição no ficheiro é igual ao id
 
-    int fd = open(dataset->filename, O_RDWR);
+    int fd = open_with_lock(dataset->filename, O_CREAT | O_RDWR, 0666, LOCK_EX);
     if (fd == -1) {
         perror("Erro ao abrir ficheiro");
         return FALSE;
     }
 
-    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
+    //procura o registo no ficheiro
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
     
     MetaInformation metaInfo;
     if (bufferedRead(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao ler do ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return FALSE;
     }
 
-    metaInformation_mark_as_deleted(&metaInfo);
+    if (metaInformation_is_deleted(&metaInfo)){
+        close_with_unlock(fd);
+        return FALSE;
+    }
 
-    lseek(fd, posicao * metaInformation_size(), SEEK_SET);
+    //marca como apagado (tecnica das tombstones)
+    metaInformation_mark_as_deleted(&metaInfo); 
+
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
     if (bufferedWrite(fd, &metaInfo, metaInformation_size()) != metaInformation_size()) {
         perror("Erro ao escrever no ficheiro");
-        close(fd);
+        close_with_unlock(fd);
         return FALSE;
     }
 
-    close(fd);
+    close_with_unlock(fd);
 
-    // Atualiza dataset
-    g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao));
-    g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
+    // Atualiza dataset (adiciona o id á stack de ids de metainformação apagados, para ser utilizada posteriormente)
+    g_queue_push_tail(dataset->MetaInformationQueue, GINT_TO_POINTER(posicao_registo));
+
+    //TODO: remove da cache se tiver
+
+    // g_hash_table_remove(dataset->MetaInformation, GINT_TO_POINTER(key));
 
     //metaInformationDataset_store(dataset);
 
@@ -192,23 +222,44 @@ gboolean metaInformationDataset_remove(MetaInformationDataset *dataset, int key)
 }
 
 MetaInformation *metaInformationDataset_consult(MetaInformationDataset *dataset, int key) {
-    MetaInformation *original = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
-    if (original == NULL || metaInformation_is_deleted(original)) {
+    //TODO: ver se tem na cache primeiro para evitar ter de ir ao ficheiro
+    //int *value = g_hash_table_lookup(dataset->MetaInformation, GINT_TO_POINTER(key));
+ 
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
+    if (fd == -1) {
+        perror("Erro ao abrir ficheiro");
         return NULL;
     }
 
-    MetaInformation *copy = g_new(MetaInformation, 1);
-    memcpy(copy, original, sizeof(MetaInformation));
-    return copy;
+    int posicao_registo = key;
+    lseek(fd, posicao_registo * metaInformation_size(), SEEK_SET);
+
+    MetaInformation *metaInfo = g_malloc(metaInformation_size());
+    if (bufferedRead(fd, metaInfo, metaInformation_size()) != metaInformation_size()) {
+        perror("Erro a ler do ficheiro");
+        g_free(metaInfo);
+        close_with_unlock(fd);
+        return NULL;
+    }
+
+    close_with_unlock(fd);
+
+    if (metaInformation_is_deleted(metaInfo)) {
+        g_free(metaInfo);
+        return NULL;
+    }
+
+    return metaInfo;
 }
 
 
 int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, int id, const char *keyword) {
+
     MetaInformation *metaInfo = metaInformationDataset_consult(dataset, id);
     if (!metaInfo || metaInformation_is_deleted(metaInfo)) {
         return -1;
     }
-    
+
     char fullpath[MAX_PATH];
     metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, metaInfo);
     
@@ -264,34 +315,46 @@ int metaInformationDataset_count_keyword_lines(MetaInformationDataset *dataset, 
     waitpid(pid, &status, 0);
     metaInformation_free(metaInfo);
 
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    if (!WIFEXITED(status) || (WEXITSTATUS(status) != 0 && WEXITSTATUS(status) != 1)) { //aceita 0 (encontrou com sucesso) ou 1 (se não encontrou nenhuma palavra igual mas leu o ficheiro)
         return -1;
     }
 
     int count = atoi(buffer); // Converte a string recebida em int
     return count;
+
 }
 
 char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, const char *keyword) {
+
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
+    if (fd == -1) {
+        perror("[ERRO] Não foi possível abrir o ficheiro de metainformação");
+        return g_strdup("[]");
+    }
+    
     GString *resultado = g_string_new("[");
 
-    GHashTableIter iter;
-    gpointer key, value;
-    g_hash_table_iter_init(&iter, dataset->MetaInformation);
+    int id = 0;
+    MetaInformation meta;
 
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        if(value == NULL) continue;
-
-        MetaInformation *meta = (MetaInformation *)value;
+    // Lê registos de metainformação até não haver mais dados
+    while (bufferedRead(fd, &meta, metaInformation_size()) == metaInformation_size()) {
+        if (metaInformation_is_deleted(&meta)) {
+                id++;
+                continue;
+        }
 
         char fullpath[MAX_PATH];
-        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
+        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, &meta);
         //printf("[DEBUG]: A procurar em: %s\n", fullpath);
 
         // cria pipe
         int pipefd[2];
-        if (pipe(pipefd) < 0) 
+        if (pipe(pipefd) < 0) {
+            id++;
             continue;
+        }
+           
 
         pid_t pid = fork();
         if (pid == 0) {
@@ -316,12 +379,14 @@ char *metaInformationDataset_search_documents(MetaInformationDataset *dataset, c
             // grep -l escreve "fullpath\n", então basta saber que encontrou
             if (resultado->len > 1)  // testa se já há algum elemento
                 g_string_append(resultado, ", ");
-            g_string_append_printf(resultado, "%d", GPOINTER_TO_INT(key));
+            g_string_append_printf(resultado, "%d", meta.idDocument);
         }
-    }
 
+        id++;
+    }
     g_string_append(resultado, "]");
     return g_string_free(resultado, FALSE);
+
 }
 
 char *metaInformationDataset_search_documents_sequential(MetaInformationDataset *dataset, const char *keyword) {
@@ -330,13 +395,7 @@ char *metaInformationDataset_search_documents_sequential(MetaInformationDataset 
 
 char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *dataset, const char *keyword, int max_procs) {
     GString *resultado = g_string_new("[");
-    GHashTableIter iter;
-    gpointer key, value;
-    g_hash_table_iter_init(&iter, dataset->MetaInformation);
-
     GArray *matching_ids = g_array_new(FALSE, FALSE, sizeof(int));
-    int active_children = 0;
-
     // Para guardar pids e respetivos doc_ids
     typedef struct {
         pid_t pid;
@@ -345,14 +404,25 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
 
     GArray *children = g_array_new(FALSE, FALSE, sizeof(ChildInfo));
 
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        if (value == NULL) continue;
+    int fd = open_with_lock(dataset->filename, O_RDONLY, 0,  LOCK_SH);
+    if (fd == -1) {
+        perror("[DEBUG] Erro ao abrir ficheiro de metainformação");
+        return NULL;
+    }
 
-        MetaInformation *meta = (MetaInformation *)value;
-        int doc_id = GPOINTER_TO_INT(key);
+    int active_children = 0;
+    int doc_id = 0;
+    MetaInformation meta;
+
+    while (read(fd, &meta, sizeof(MetaInformation)) == sizeof(MetaInformation)) {
+
+        if (metaInformation_is_deleted(&meta)) {
+            doc_id++;
+            continue;
+        }
 
         char fullpath[MAX_PATH];
-        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, meta);
+        metaInformationDataset_buildfull_documentpath(fullpath, sizeof(fullpath), dataset, &meta);
 
         pid_t pid = fork();
         if (pid == 0) {
@@ -365,7 +435,7 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
             active_children++;
         }
 
-        // Se atingimos o limite, espera por algum
+        // Se atingimos o limite de processos, espera por algum
         if (active_children >= max_procs) {
             int status;
             pid_t ended = wait(&status);
@@ -383,11 +453,11 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
                     break;  // Só pode haver um com este pid
                 }
             }
-            
         }
+        doc_id++;
     }
 
-    // Espera por os restantes filhos
+    // Espera pelos  restantes filhos
     while (active_children > 0) {
         int status;
         pid_t ended = wait(&status);
@@ -418,15 +488,6 @@ char *metaInformationDataset_search_documents_parallel(MetaInformationDataset *d
 
 void metaInformationDataset_free(MetaInformationDataset *dataset) {
     if (dataset) {
-        if (dataset->MetaInformation) {
-            GHashTableIter iter;
-            gpointer key, value;
-            g_hash_table_iter_init(&iter, dataset->MetaInformation);
-            while (g_hash_table_iter_next(&iter, &key, &value)) {
-                g_free(value); // liberta MetaInformation*
-            }
-            g_hash_table_destroy(dataset->MetaInformation);
-        }
 
         if (dataset->MetaInformationQueue) {
             g_queue_free(dataset->MetaInformationQueue);

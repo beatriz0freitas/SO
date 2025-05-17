@@ -1,5 +1,8 @@
 #include "utils.h"
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <stdio.h>
 
 ssize_t bufferedRead(int fd, void *buf, size_t count) {
     ssize_t bytesRead = 0;
@@ -33,6 +36,34 @@ ssize_t bufferedWrite (int fd, const void *buf, size_t count) {
     }
     return bytesWritten;
 }
+
+
+
+int open_with_lock(const char *path, int flags, mode_t mode, int lock_type) {
+    int fd = open(path, flags, mode);
+    if (fd == -1) {
+        perror("Erro ao abrir ficheiro com lock");
+        return -1;
+    }
+    if (flock(fd, lock_type) != 0) {
+        perror("Erro ao aplicar lock no ficheiro");
+        close(fd);
+        return -1;
+    }
+    return fd;
+}
+
+int close_with_unlock(int fd) {
+    if (flock(fd, LOCK_UN) != 0) {
+        perror("Erro ao remover lock");
+        return -1;
+    }
+    return close(fd);
+}
+
+
+
+
 
 //TODO: Confirmar esta Mysystem
 
