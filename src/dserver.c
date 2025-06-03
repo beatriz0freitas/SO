@@ -16,7 +16,6 @@
 
 #define MAX_PATH 256
 
-// envia a resposta de volta ao FIFO do cliente
 void dserver_sendResponse(const char *fifo_serverToClient, const char *resposta) {
     int fd_client = open(fifo_serverToClient, O_WRONLY);
     if (fd_client == -1) {
@@ -39,7 +38,6 @@ int main(int argc, char *argv[]) {
     } else {
         perror("[DEBUG]: Erro ao obter o diretório atual (getcwd)");
     }
-
 
     if (argc < 3) {
         fprintf(stderr, "Uso: %s <document_folder> <cache_size>\n", argv[0]);
@@ -66,13 +64,9 @@ int main(int argc, char *argv[]) {
     }
     printf("[Server] FIFO '%s' criado. A esperar por mensagens...\n", fifo_clientToServer);
 
-    // Inicializa estruturas
     Executer *executer = executer_new(); // Instância principal do PAI
     MetaInformationDataset *dataset = metaInformationDataset_new(document_folder, cache_size); // Instância principal do PAI
 
-    //metaInformationDataset_load(dataset);
-
-    // Abre FIFO para leitura
     int fd_server = open(fifo_clientToServer, O_RDONLY);
     if (fd_server == -1) {
         perror("[Server] Erro ao abrir fifo_clientToServer");
@@ -80,6 +74,7 @@ int main(int argc, char *argv[]) {
         metaInformationDataset_free(dataset);
         return 1;
     }
+
     // Mantém um escritor aberto para não EOF
     int fd_dummy = open(fifo_clientToServer, O_WRONLY);
     if (fd_dummy == -1) {
@@ -92,13 +87,8 @@ int main(int argc, char *argv[]) {
 
     Message msg;
     ssize_t nbytes;
-    gboolean terminar_pai = FALSE; // Flag do PAI para controlar o seu próprio loop principal.
-                                   // A 'terminar' original era passada para executer_execute.
-
-    // TODO: Adicionar gestão de processos filho zombie aqui (ex: SIGCHLD handler ou waitpid com WNOHANG no loop).
-    // AVISO: Sem esta gestão, processos zombie SERÃO criados e acumular-se-ão!
-
-
+    gboolean terminar_pai = FALSE; 
+    
     while (!terminar_pai && (nbytes = bufferedRead(fd_server, &msg, sizeof(Message))) > 0) {
 
         // Recolhe processos filhos terminados para evitar zombies
@@ -110,7 +100,6 @@ int main(int argc, char *argv[]) {
 
         if (!cmd_ptr || !info_ptr) {
             fprintf(stderr, "[Server] mensagem inválida\n");
-            // TODO: Considerar enviar uma resposta de erro específica ao cliente aqui.
             continue;
         }
 
@@ -144,22 +133,13 @@ int main(int argc, char *argv[]) {
 
             if (pid == -1) {
                 perror("[Server Parent] Erro no fork");
-                // TODO: Enviar uma resposta de erro ao cliente se o fork falhar.
             } else if (pid == 0) { // Processo Filho
 
                 close(fd_server);
                 close(fd_dummy);
 
-                // O filho usa os ponteiros 'executer' e 'dataset' do pai.
-                // O SO trata da cópia de memória (Copy-on-Write) se o filho tentar
-                // modificar o conteúdo das estruturas apontadas (o que não deve
-                // acontecer para leituras). O acesso ao ficheiro 'information.bin' é partilhado.
-
                 gboolean flag_terminar_para_executer_do_filho = (current_command_flag == CMD_SHUTDOWN);
 
-                // TODO ALERTA LOCKS (FILHO - LEITURA): As funções em MetaInformationDataset
-                // que são chamadas por executer_execute (ex: _consult, _search) DEVEM
-                // implementar LOCK_SH (shared lock) para proteger o acesso ao ficheiro 'information.bin'.
                 char *resp = executer_execute(executer, cmd_ptr, dataset, &flag_terminar_para_executer_do_filho);
 
                 if (resp) {
@@ -171,17 +151,9 @@ int main(int argc, char *argv[]) {
                     dserver_sendResponse(msg.fifo_client, error_msg);
 
                 }
-
-                // TODO: Numa implementação final, o filho deveria libertar quaisquer recursos
-                // que sejam efetivamente copiados para ele ou que ele aloque.
-                // Para "mexe o menos possível", esta libertação é omitida aqui, confiando no SO.
-                // Ex: executer_free(executer_copia_filho); dataset_free(dataset_copia_filho);
-
-                // TODO: O filho DEVE terminar explicitamente com exit() após completar a sua tarefa.
                 exit(0);
             }
-            // Processo Pai continua o loop IMEDIATAMENTE.
-            // NÃO espera pelo filho aqui (o que levará a processos zombie).
+
         } else { // Operações de escrita (CMD_ADD, CMD_DELETE) ou CMD_INVALID - executadas sequencialmente pelo PAI
             if (terminar_pai) { // Se o servidor está a terminar, não processa novas escritas
                 dserver_sendResponse(msg.fifo_client, "Servidor em processo de encerramento. Comando rejeitado.");
@@ -192,11 +164,7 @@ int main(int argc, char *argv[]) {
                 // Se executer_execute precisasse de uma flag de output, seria uma local.
                 gboolean dummy_flag_para_executer = FALSE;
 
-                // TODO ALERTA LOCKS (PAI - ESCRITA): As funções em MetaInformationDataset
-                // que são chamadas por executer_execute (ex: _add, _remove) DEVEM
-                // implementar LOCK_EX (exclusive lock) para proteger o acesso ao ficheiro 'information.bin'.
                 char *resp = executer_execute(executer, cmd_ptr, dataset, &dummy_flag_para_executer);
-
                 if (resp) {
                     dserver_sendResponse(msg.fifo_client, resp);
                     free(resp);
@@ -217,15 +185,6 @@ int main(int argc, char *argv[]) {
     close(fd_server);
     close(fd_dummy);
     unlink(fifo_clientToServer);
-
-    // Guarda estado e liberta
-    //metaInformationDataset_store(dataset);
-
-    // TODO: Antes de libertar 'dataset' e 'executer', é crucial garantir que todos os
-    // processos filho tenham terminado, especialmente se eles usam os mesmos ponteiros (mesmo
-    // que o SO faça copy-on-write para memória, descritores de ficheiro dentro dessas
-    // estruturas poderiam ser um problema se não geridos cuidadosamente).
-    // Um loop com wait() bloqueante é uma forma de esperar por todos os filhos.
 
     // AVISO: Se esta limpeza final não for suficiente e não houver reaping no loop,
     // zombies persistirão até o servidor realmente terminar.

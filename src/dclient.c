@@ -29,7 +29,7 @@ void dclient_sendMessage (const char* fifo_serverToClient, Message *msg) {
         exit(1);
     }
 
-    close(fd_server);  // Fecha o FIFO do servidor após enviar a mensagem
+    close(fd_server);
     printf("[CLIENTE] Mensagem enviada para o servidor\n");
 }
 

@@ -2,9 +2,6 @@
 #include <string.h>
 #include <glib.h>
 
-
-
-//caso altermos para char* na struct temos de fazer strdup()
 MetaInformation metaInformation_new(){
     MetaInformation information;
     memset(&information, 0, sizeof(MetaInformation));

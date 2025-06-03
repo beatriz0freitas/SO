@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/dserver",
-            "args": [ "documentos", "10"],
+            "args": [ "data/Gdataset", "10"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

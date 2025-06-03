@@ -18,7 +18,7 @@ indexar:
 
 run: folders all
 	@echo "[INFO] A iniciar servidor em background..."
-	@bin/dserver data/Gdataset & echo $$! > tmp/server.pid
+	@bin/dserver data/Gdataset 10 & echo $$! > tmp/server.pid
 	@sleep 1
 	@echo "[INFO] A correr script de indexação..."
 	chmod +x bin/addGdatasetMetadata.sh
@@ -68,12 +68,16 @@ test_concurrency: test/test_libs
 	bats --formatter pretty test/test_concurrency.bats; \
     @echo "[INFO] Bats concurrency test run complete."
 
+test_cache_performance:
+	echo "[INFO] Running Bats tests in test/test_cache_performance.bats..."
+	bats --formatter pretty test/test_cache_performance.bats;
+	echo "[INFO] Bats cache performance test run complete."
 
 reset_test_env: cleanAll
 	@echo "[Info] Ambiente de teste limpo"
 	@rm -f information.bin || true
 
-clean:
+clean: reset_test_env
 	rm -f obj/*.o tmp/*
 	rm -f bin/dserver bin/dclient
 
