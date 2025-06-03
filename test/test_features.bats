@@ -18,7 +18,7 @@ fi
 # --- Global Configuration ---
 readonly SERVER_EXEC="./bin/dserver"
 readonly CLIENT_EXEC="./bin/dclient"
-readonly TEST_DOC_FOLDER="test/testdocs"
+readonly TEST_DOC_FOLDER="data/Gdataset"
 readonly CACHE_SIZE="10"
 readonly SERVER_LOG_BATS="dserver_bats.log"
 readonly SERVER_FIFO_DIR_BATS="fifos"
