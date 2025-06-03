@@ -16,7 +16,6 @@ CommandFlag command_parse_flag(char *flagStr, int numArgs) {
     return CMD_INVALID;
 }
 
-
 const char *commandFlag_to_string(CommandFlag flag) {
     switch (flag) {
         case CMD_ADD: return "Indexar";
@@ -29,7 +28,6 @@ const char *commandFlag_to_string(CommandFlag flag) {
         default: return "INVALID";
     }
 }
-
 
 Command command_constroi_de_linha(int numArgs, char *linha[]) {
 
@@ -48,7 +46,6 @@ Command command_constroi_de_linha(int numArgs, char *linha[]) {
     }
     return cmd;
 }
-
 
 int command_get_num_args(Command *cmd) {
     return cmd->num_args;
