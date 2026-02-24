@@ -18,7 +18,7 @@ indexar:
 
 run: folders all
 	@echo "[INFO] A iniciar servidor em background..."
-	@bin/dserver data/Gdataset 10 & echo $$! > tmp/server.pid
+	@bin/dserver data/Gdataset 100 & echo $$! > tmp/server.pid
 	@sleep 1
 	@echo "[INFO] A correr script de indexação..."
 	chmod +x bin/addGdatasetMetadata.sh
